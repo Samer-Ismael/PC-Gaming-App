@@ -1,0 +1,7 @@
+Flask
+werkzeug
+psutil
+webbrowser
+pywin32
+pynvml
+clr
