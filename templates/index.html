@@ -40,8 +40,25 @@
             <button id="mute">Mute</button>
             <button id="unmute">Unmute</button>
         </div>
-        
+        <!-- Fan Control -->
+        <div class="fan-control">
+            <h2>Fan Control</h2>
+            <label for="fan-speed">Set Fan Speed (%):</label>
+            <input type="number" id="fan-speed" placeholder="Enter 0-100" />
+            <button id="set-fan-speed">Set Speed</button>
+            <h3>Current Fan Speeds</h3>
+            <button id="get-fan-speeds">Get Fan Speeds</button>
+            <div id="fan-speeds"></div>
+        </div>
     </div>
+    <script>
+        // Show a popup with the IP address
+        window.onload = function() {
+            const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
+            alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
+}
+    </script>
+
     <script src="/static/script.js"></script>
 </body>
 </html>

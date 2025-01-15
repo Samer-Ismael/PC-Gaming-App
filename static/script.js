@@ -1,8 +1,3 @@
-// Show a popup with the IP address
-window.onload = function() {
-    const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
-    alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
-}
 
 function fetchMetrics() {
     fetch('/metrics')
