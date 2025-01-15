@@ -19,19 +19,11 @@ log.setLevel(logging.ERROR)
 gpu_available = init_gpu()
 print(f"GPU Available: {gpu_available}")
 
-def unmute_volume():
-    """Unmute the system volume (same as mute since it toggles)."""
-    ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
-
 def press_volume_key(key_code, times=1):
     """Simulates pressing a volume key."""
     for _ in range(times):
         ctypes.windll.user32.keybd_event(key_code, 0, 0, 0)
         ctypes.windll.user32.keybd_event(key_code, 0, 2, 0)  # Key release
-
-def mute_volume():
-    """Mute the system volume."""
-    ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
 
 def get_cpu_temperature():
     return cpu.get_temperatures()
@@ -108,7 +100,7 @@ def decrease_volume():
 @app.route('/volume/mute', methods=['POST'])
 def mute():
     try:
-        mute_volume()
+        ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
         return jsonify({"message": "Volume muted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -116,7 +108,7 @@ def mute():
 @app.route('/volume/unmute', methods=['POST'])
 def unmute():
     try:
-        unmute_volume()
+        ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
         return jsonify({"message": "Volume unmuted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
