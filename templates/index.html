@@ -21,6 +21,9 @@
             <p>Usage: <span id="ram-usage">Loading...</span>%</p>
             <p>Total: <span id="ram-total">Loading...</span> GB</p>
             <p>Free: <span id="ram-free">Loading...</span> GB</p>
+            <div>
+                <button id="clear-cache">Clear Cache</button>
+            </div>            
         </div>
         <div class="metric">
             <h2>Disk</h2>
@@ -42,6 +45,14 @@
         </div>
         
     </div>
+    <script>
+        // Show a popup with the IP address
+        window.onload = function() {
+            const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
+            alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
+        }
+    </script>
+    
     <script src="/static/script.js"></script>
 </body>
 </html>

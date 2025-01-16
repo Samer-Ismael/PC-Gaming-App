@@ -1,8 +1,4 @@
-// Show a popup with the IP address
-window.onload = function() {
-    const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
-    alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
-}
+
 
 function fetchMetrics() {
     fetch('/metrics')
@@ -53,4 +49,11 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => console.log(data.message))
             .catch(error => console.error('Error:', error));
     });
+});
+
+document.getElementById("clear-cache").addEventListener("click", () => {
+    fetch("/clear_cache", { method: "POST" })
+        .then(response => response.json())
+        .then(data => alert(data.message || data.error))
+        .catch(err => console.error("Error clearing cache:", err));
 });

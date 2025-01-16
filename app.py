@@ -4,7 +4,7 @@ import logging
 from werkzeug.serving import WSGIRequestHandler
 from gpu import get_gpu_metrics, init_gpu
 import cpu 
-from ram import get_ram_metrics
+from ram import get_ram_metrics, clear_cache_mem
 from disk import get_disk_metrics
 import psutil
 import webbrowser
@@ -112,6 +112,14 @@ def unmute():
         return jsonify({"message": "Volume unmuted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
+
+@app.route("/clear_cache", methods=["POST"])
+def clear_cache():
+    try:
+        clear_cache_mem() 
+        return jsonify({"message": "Standby memory cleared successfully."}), 200  
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 #-------------------------------------------------------------------------------------
 
 
