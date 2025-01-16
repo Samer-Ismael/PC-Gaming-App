@@ -46,15 +46,27 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color:rgb(154, 154, 156);
+    background-color: rgb(154, 154, 156);
     color: #333;
 }
+
+/* Header Styling */
 header {
-    background-color:rgb(86, 76, 175);
+    background-color: rgb(86, 76, 175);
     color: white;
     padding: 15px;
     text-align: center;
 }
+
+/* Footer Styling */
+footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Container Styling */
 .container {
     max-width: 900px;
     margin: 20px auto;
@@ -63,37 +75,88 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
 }
+
+/* Metric Section Styling */
 .metric {
     border-bottom: 1px solid #ddd;
     padding: 10px 0;
 }
+
 .metric:last-child {
     border-bottom: none;
 }
-.metric h2, .volume-controls {
+
+.metric h2,
+.volume-controls {
     font-size: 18px;
     margin: 0;
-    color:rgb(175, 112, 76);
+    color: rgb(175, 112, 76);
 }
+
 .metric p {
     margin: 5px 0;
 }
-footer {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 12px;
-    color: #666;
+
+.metric div {
+    text-align: left;
 }
-/* Mobile styles */
+
+/* Icon Styling for Volume Controls */
+.volume-controls i {
+    margin-right: 8px; /* Space between icon and text */
+}
+
+/* ----------------------------------------
+   Button Styling
+---------------------------------------- */
+
+/* General Button Styling */
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: rgb(86, 76, 175); /* Purple color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Hover and Active Button States */
+button:hover {
+    background-color: #45a049; /* Darker green when hovered */
+    transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+button:active {
+    transform: scale(0.98); /* Shrink the button on click */
+}
+
+/* Volume Controls Button Styling */
+.volume-controls button {
+    background-color: rgb(86, 76, 175); /* Same purple for consistency */
+    border-radius: 8px;
+    padding: 15px 32px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+/* ----------------------------------------
+   Responsive Styles
+---------------------------------------- */
+
+/* Mobile Styles for Header and Metrics */
 @media (max-width: 600px) {
     header {
         font-size: 18px;
     }
+
     .metric h2 {
         font-size: 16px;
     }
-}
-@media (max-width: 600px) {
+
+    /* Full-width buttons on smaller screens */
     .volume-controls button {
         width: 100%; /* Full width on small screens */
         font-size: 14px; /* Smaller text size */
