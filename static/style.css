@@ -13,8 +13,30 @@
     transition: background-color 0.3s; /* Smooth transition */
 }
 
-.volume-controls button:hover {
-    background-color: #45a049; /* Darker green on hover */
+/* Button Styling */
+button {
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color:rgb(86, 76, 175);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background-color: #45a049; /* Darker green when hovered */
+    transform: scale(1.05); /* Slightly enlarge the button */
+}
+
+button:active {
+    transform: scale(0.98); /* Shrink the button on click */
+}
+
+/* Button container (to center the button) */
+.metric div {
+    text-align: left;
 }
 
 .volume-controls i {

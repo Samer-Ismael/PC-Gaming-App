@@ -24,7 +24,6 @@ if not is_admin():
 
 print("Running with administrator privileges.")
 
-
 dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'OpenHardwareMonitorLib.dll')
 
 clr.AddReference(dll_path)
@@ -38,7 +37,6 @@ def get_temperatures():
     hw.Open()
 
     cpu_temp = None
-    gpu_temp = None
 
     for i in hw.Hardware:
         i.Update()  
@@ -47,7 +45,6 @@ def get_temperatures():
             if sensor.SensorType == Hardware.SensorType.Temperature and i.HardwareType == Hardware.HardwareType.CPU:
                 if sensor.Name == "CPU Package":
                     cpu_temp = sensor.Value
-
            
             if sensor.SensorType == Hardware.SensorType.Temperature and i.HardwareType == Hardware.HardwareType.GpuNvidia:
                 if sensor.Name == "GPU Core":
