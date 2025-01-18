@@ -11,8 +11,9 @@ def get_disk_metrics():
     }
 
 def delete_files_in_directory(directory):
-        if os.path.exists(directory):
-            for filename in os.listdir(directory):
+    if os.path.exists(directory):
+        number = 0
+        for filename in os.listdir(directory):
                 file_path = os.path.join(directory, filename)
                 try:
                     if os.path.isdir(file_path):
@@ -21,10 +22,13 @@ def delete_files_in_directory(directory):
                         os.remove(file_path)
                         print(f"Deleted: {file_path}")
                 except PermissionError as e:
-                    print(f"Skipping in-use file")
+                    number += 1
                 except Exception as e:
                     print(f"Failed to delete {file_path}: {e}")
 
+        print(f"Skipped {number} files because they were in use.")
+            
+            
 def clear_temp_files():
     temp_dir = tempfile.gettempdir()
     app_data_temp_dir = os.path.join(os.getenv('APPDATA'), 'Local', 'Temp')

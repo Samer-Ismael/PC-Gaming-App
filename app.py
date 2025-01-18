@@ -51,6 +51,13 @@ def get_ip_address():
 def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
 
+
+#-------------------------------------------------------------------------------------
+@app.route("/")
+def index():
+    ip_address = get_ip_address()
+    return render_template("index.html", ip_address=ip_address)
+
 @app.route("/speed_test" , methods=["GET"])
 def speed_test():
     try:
@@ -69,13 +76,6 @@ def speed_test():
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-#-------------------------------------------------------------------------------------
-@app.route("/")
-def index():
-    ip_address = get_ip_address()
-    return render_template("index.html", ip_address=ip_address)
-
 
 @app.route("/metrics")
 def metrics():
@@ -152,7 +152,6 @@ def clear_cache():
         return jsonify({"message": "Standby memory cleared successfully."}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
     
 @app.route("/clear_temp_files", methods=["POST"])
 def clear_temp_files_route():
