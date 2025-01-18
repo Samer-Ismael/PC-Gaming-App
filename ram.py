@@ -1,6 +1,8 @@
+from asyncio import sleep
 import gc
 import os
 import subprocess
+import time
 import psutil
 from flask import jsonify
 
@@ -12,14 +14,6 @@ def get_ram_metrics():
         "free": round(ram.available / (1024 ** 3), 2),
     }
 
-
-def print_memory_info():
-    mem = psutil.virtual_memory()
-    print(f"Total: {mem.total // (1024 ** 2)} MB")
-    print(f"Available: {mem.available // (1024 ** 2)} MB")
-    print(f"Used: {mem.used // (1024 ** 2)} MB")
-    return mem
-
 def clear_cache_mem():
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,12 +22,14 @@ def clear_cache_mem():
     
     if os.path.exists(path):
             try:
-                print("Before: ")
-                print_memory_info
-                subprocess.run([path, "standbylist"], check=True)
-                print ("After: ")
-                print_memory_info
+                subprocess.run([path, "workingsets"], check=True)
+                print("Working sets cleared successfully!")
+                                
+                time.sleep(1)
                 
+                subprocess.run([path, "standbylist"], check=True)
                 print("Standby list cleared successfully!")
+                
+                print("Memory cleared successfully!")
             except subprocess.CalledProcessError as e:
                 print(f"Error clearing standby list: {e}")

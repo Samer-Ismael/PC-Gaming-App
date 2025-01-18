@@ -52,8 +52,29 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.getElementById("clear-cache").addEventListener("click", () => {
+    const loadingMessage = document.getElementById("loading-message");
+
+    loadingMessage.style.display = "block";
+    loadingMessage.textContent = "Please wait, clearing memory..."; 
+
     fetch("/clear_cache", { method: "POST" })
         .then(response => response.json())
-        .then(data => alert(data.message || data.error))
-        .catch(err => console.error("Error clearing cache:", err));
+        .then(data => {
+            if (data.status === "success") {
+                loadingMessage.textContent = "Cleaning Done!";
+                
+                setTimeout(() => {
+                    loadingMessage.style.display = "none";
+                }, 2000);
+            } else {
+                alert(data.message || "Failed to clear memory.");
+                loadingMessage.style.display = "none";
+            }
+        })
+        .catch(err => {
+            loadingMessage.style.display = "none"; 
+
+            console.error("Error clearing cache:", err);
+            alert("An error occurred while clearing memory.");
+        });
 });
