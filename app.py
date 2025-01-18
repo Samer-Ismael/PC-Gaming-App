@@ -1,11 +1,12 @@
+import threading
 from flask import Flask, jsonify, render_template, request
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
-from gpu import get_gpu_metrics, init_gpu
+from gpu import get_gpu_metrics, init_gpu, set_gpu_fan_speed_to_max
 import cpu 
-from ram import get_ram_metrics
-from disk import get_disk_metrics
+from ram import get_ram_metrics, clear_cache_mem
+from disk import get_disk_metrics, clear_temp_files
 import psutil
 import webbrowser
 import os
@@ -84,7 +85,7 @@ def metrics():
 @app.route('/volume/increase', methods=['POST'])
 def increase_volume():
     try:
-        press_volume_key(0xAF, 5)  # VK_VOLUME_UP
+        press_volume_key(0xAF, 2)  # VK_VOLUME_UP
         return jsonify({"message": "Volume increased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -92,7 +93,7 @@ def increase_volume():
 @app.route('/volume/decrease', methods=['POST'])
 def decrease_volume():
     try:
-        press_volume_key(0xAE, 5)  # VK_VOLUME_DOWN
+        press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
         return jsonify({"message": "Volume decreased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -112,6 +113,31 @@ def unmute():
         return jsonify({"message": "Volume unmuted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
+
+@app.route("/clear_cache", methods=["POST"])
+def clear_cache():
+    try:
+        clear_cache_mem() 
+        return jsonify({"message": "Standby memory cleared successfully."}), 200  
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/clear_temp_files", methods=["POST"])
+def clear_temp_files_route():
+    try:
+        clear_temp_files()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
+@app.route("/freeze_gpu_fan", methods=["POST"])
+def freeze_gpu_fan():
+    threading.Thread(target=set_gpu_fan_speed_to_max, daemon=True).start()
+    
+    return jsonify({"message": "Fan speed set to 100%, it will reset automatically after 1 minute."}), 200
+
+
 #-------------------------------------------------------------------------------------
 
 

@@ -1,4 +1,5 @@
 
+
 function fetchMetrics() {
     fetch('/metrics')
         .then(response => response.json())
@@ -48,4 +49,60 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(data => console.log(data.message))
             .catch(error => console.error('Error:', error));
     });
+});
+
+document.getElementById("clear-cache").addEventListener("click", () => {
+    const loadingMessage = document.getElementById("loading-message");
+
+    loadingMessage.style.display = "block";
+    loadingMessage.textContent = "Please wait, clearing memory..."; 
+
+    fetch("/clear_cache", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                loadingMessage.textContent = "Cleaning Done!";
+                
+                setTimeout(() => {
+                    loadingMessage.style.display = "none";
+                }, 2000);
+            } else {
+                alert(data.message || "Failed to clear memory.");
+                loadingMessage.style.display = "none";
+            }
+        })
+        .catch(err => {
+            loadingMessage.style.display = "none"; 
+
+            console.error("Error clearing cache:", err);
+            alert("An error occurred while clearing memory.");
+        });
+});
+
+
+document.getElementById("clear-temp-files").addEventListener("click", () => {
+    const diskLoadingMessage = document.getElementById("disk-loading-message");
+    diskLoadingMessage.style.display = "block";
+    diskLoadingMessage.textContent = "Please wait, clearing temporary files..."; 
+
+    fetch("/clear_temp_files", { method: "POST" })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === "success") {
+                diskLoadingMessage.textContent = "Temporary files cleared successfully!";
+                setTimeout(() => {
+                    diskLoadingMessage.style.display = "none";
+                }, 2000);
+            } else {
+                diskLoadingMessage.textContent = "Failed to clear temporary files.";
+                setTimeout(() => {
+                    diskLoadingMessage.style.display = "none";
+                }, 2000);
+            }
+        })
+        .catch(err => {
+            diskLoadingMessage.style.display = "none";
+            console.error("Error clearing temp files:", err);
+            alert("An error occurred while clearing temp files.");
+        });
 });

@@ -21,17 +21,31 @@
             <p>Usage: <span id="ram-usage">Loading...</span>%</p>
             <p>Total: <span id="ram-total">Loading...</span> GB</p>
             <p>Free: <span id="ram-free">Loading...</span> GB</p>
+            
+            <div>
+                <button id="clear-cache">Clear Cache</button>
+                <p id="loading-message" style="display: none;">Please wait, clearing memory...</p>
+            </div>            
+            
         </div>
         <div class="metric">
             <h2>Disk</h2>
             <p>Usage: <span id="disk-usage">Loading...</span>%</p>
             <p>Free Space: <span id="disk-free">Loading...</span> GB</p>
+            <div>
+                <button id="clear-temp-files">Clear Temp Files</button>
+                <p id="disk-loading-message" style="display: none;">Please wait, clearing temporary files...</p>
+            </div>
         </div>
         <div class="metric">
             <h2>GPU</h2>
             <p>Name: <span id="gpu-name">Loading...</span></p>
             <p>Temperature: <span id="gpu-temperature">Loading...</span>°C</p>
             <p>Utilization: <span id="gpu-utilization">Loading...</span>%</p>
+            <div>
+                <button id="freeze-gpu">Freeze GPU Fan for 1 Minute</button>
+                <p id="gpu-loading-message">Please wait, setting the GPU fan to 100% for 1 minute...</p>
+            </div>
         </div>
         <div class="volume-controls">
             <h2>Vloume</h2>
@@ -40,25 +54,16 @@
             <button id="mute">Mute</button>
             <button id="unmute">Unmute</button>
         </div>
-        <!-- Fan Control -->
-        <div class="fan-control">
-            <h2>Fan Control</h2>
-            <label for="fan-speed">Set Fan Speed (%):</label>
-            <input type="number" id="fan-speed" placeholder="Enter 0-100" />
-            <button id="set-fan-speed">Set Speed</button>
-            <h3>Current Fan Speeds</h3>
-            <button id="get-fan-speeds">Get Fan Speeds</button>
-            <div id="fan-speeds"></div>
-        </div>
+        
     </div>
     <script>
         // Show a popup with the IP address
         window.onload = function() {
             const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
             alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
-}
+        }
     </script>
-
+    
     <script src="/static/script.js"></script>
 </body>
 </html>

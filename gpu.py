@@ -1,3 +1,5 @@
+import subprocess
+import time
 from pynvml import *
 
 def init_gpu():
@@ -42,3 +44,24 @@ def get_gpu_metrics():
             "memory_used": "Unavailable",
             "memory_total": "Unavailable",
         }
+
+def set_gpu_fan_speed_to_max():
+    try:
+        nvmlInit()
+        
+        handle = nvmlDeviceGetHandleByIndex(0)
+
+        fan_speed = nvmlDeviceGetFanSpeed(handle)
+        print(f"Current fan speed: {fan_speed}%")
+
+        nvmlDeviceSetFanSpeed(handle, 100)
+        print("Fan speed set to 100%")
+        
+        time.sleep(60)
+
+        print("Fan speed should reset to default automatically")
+
+        nvmlShutdown()  # Shutdown NVML
+
+    except Exception as e:
+        print(f"Error setting fan speed: {e}")
