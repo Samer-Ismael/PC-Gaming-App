@@ -1,11 +1,11 @@
 /* Color Theme */
 :root {
-    --primary-color: #0066cc; /* Blue for accents */
-    --secondary-color: #e6f2ff; /* Light blue for card backgrounds */
-    --background-color: #f9f9f9; /* Light gray for the overall background */
+    --primary-color: #024d99; /* Blue for accents */
+    --secondary-color: #d3dee9; /* Light blue for card backgrounds */
+    --background-color: #888887; /* Light gray for the overall background */
     --text-color: #333333; /* Dark gray for text */
     --border-color: #cccccc; /* Light gray for borders */
-    --highlight-color: #004080; /* Darker blue for hover effects */
+    --highlight-color: #019297; /* Darker blue for hover effects */
 }
 
 body {
