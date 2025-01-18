@@ -9,6 +9,7 @@
 <body>
     <header>
         <h1>Smokey & Lemoneh</h1>
+        <h4>To use the same page on your phone use this link: 'http://{{ ip_address }}:5000'</h4>
     </header>
     <div class="container">
         <div class="metric">
@@ -67,7 +68,6 @@
         // Show a popup with the IP address
         window.onload = function() {
             const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
-            alert("This is the link to use on your phone: 'http://" + ipAddress + ":5000'");
         }
     </script>
     

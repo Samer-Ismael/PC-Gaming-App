@@ -75,6 +75,7 @@ def speed_test():
         })
 
     except Exception as e:
+        print(f"Error during speed test: {str(e)}")
         return jsonify({"error": str(e)})
 
 @app.route("/metrics")
