@@ -68,7 +68,6 @@ def metrics():
         cpu_usage = psutil.cpu_percent(interval=1)
         cpu_freq = psutil.cpu_freq()
         current = cpu_freq.current
-        min = cpu_freq.min
         max = cpu_freq.max
         ram_metrics = get_ram_metrics()
         disk_metrics = get_disk_metrics()
@@ -78,7 +77,6 @@ def metrics():
             "cpu": {
                 "usage": cpu_usage,
                 "Frequency-curent": current,
-                "Frequency-min": min,
                 "Frequency-max": max,
                 "temperature": get_cpu_temperature(),
             },
@@ -93,8 +91,7 @@ def metrics():
                 "usage": "Unavailable", 
                 "temperature": "Unavailable", 
                 "frequency_current": "Unavailable", 
-                "frequency_min": "Unavailable", 
-                "frequency_max": "Unavailable"
+                "frequency_max": "Unavailable",
             },            
             "ram": {"usage": "Unavailable", "total": "Unavailable", "free": "Unavailable"},
             "disk": {"usage": "Unavailable", "free_space": "Unavailable"},
