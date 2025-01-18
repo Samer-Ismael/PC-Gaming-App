@@ -130,14 +130,6 @@ def clear_temp_files_route():
         return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-    
-@app.route("/freeze_gpu_fan", methods=["POST"])
-def freeze_gpu_fan():
-    threading.Thread(target=set_gpu_fan_speed_to_max, daemon=True).start()
-    
-    return jsonify({"message": "Fan speed set to 100%, it will reset automatically after 1 minute."}), 200
-
-
 #-------------------------------------------------------------------------------------
 
 

@@ -106,22 +106,3 @@ document.getElementById("clear-temp-files").addEventListener("click", () => {
             alert("An error occurred while clearing temp files.");
         });
 });
-
-
-document.getElementById("freeze-gpu").addEventListener("click", function() {
-    const loadingMessage = document.getElementById("gpu-loading-message");
-    loadingMessage.style.display = "block";
-
-    fetch("/freeze_gpu_fan", { method: "POST" })
-        .then(response => response.json())
-        .then(data => {
-            loadingMessage.style.display = "none";
-            if (data.message) {
-                alert(data.message);
-            }
-        })
-        .catch(error => {
-            loadingMessage.style.display = "none";
-            alert("Error: " + error.message);
-        });
-});
