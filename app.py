@@ -84,7 +84,7 @@ def metrics():
 @app.route('/volume/increase', methods=['POST'])
 def increase_volume():
     try:
-        press_volume_key(0xAF, 5)  # VK_VOLUME_UP
+        press_volume_key(0xAF, 2)  # VK_VOLUME_UP
         return jsonify({"message": "Volume increased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -92,7 +92,7 @@ def increase_volume():
 @app.route('/volume/decrease', methods=['POST'])
 def decrease_volume():
     try:
-        press_volume_key(0xAE, 5)  # VK_VOLUME_DOWN
+        press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
         return jsonify({"message": "Volume decreased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
