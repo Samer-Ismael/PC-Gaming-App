@@ -2,8 +2,8 @@ import os
 import sys
 import ctypes
 import clr
+import psutil
 import wmi
-
 
 def is_admin():
     """Check if the script is running with administrator privileges."""
@@ -53,16 +53,27 @@ def get_cpu_temperature():
 
 def get_cpu_temperature_intel():
     try:
-        w = wmi.WMI(namespace="root\\WMI")
-        sensors = w.query("SELECT * FROM MSSensor")
-
-        cpu_temp = None
-
-        for sensor in sensors:
-            if sensor.SensorType == "Temperature" and "CPU" in sensor.Name:
-                cpu_temp = float(sensor.CurrentReading) / 10 
-
-        return cpu_temp
+        temps = psutil.sensors_temperatures()
+        if "coretemp" in temps:
+            cpu_temp = temps["coretemp"][0].current  
+            return cpu_temp
+        else:
+            return "Temperature data not available"
     except Exception as e:
-        print(f"Error retrieving CPU temperature: {e}")
-        return None
+        return f"Error retrieving CPU temperature: {e}"
+    
+
+def get_cpu_temperature_wmi():
+    try:
+        w = wmi.WMI()
+
+        probes = w.query("SELECT * FROM Win32_TemperatureProbe")
+
+        for probe in probes:
+            if probe.CurrentReading is not None:
+                temp = (probe.CurrentReading / 10.0) - 273.15
+                return temp
+        
+        return "CPU temperature data not available."
+    except Exception as e:
+        return f"Error retrieving CPU temperature: {e}"
