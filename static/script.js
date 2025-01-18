@@ -113,6 +113,7 @@ document.getElementById('start-speed-test').addEventListener('click', function()
     document.getElementById('speed-test').style.display = 'block';
     document.getElementById('down-speed').textContent = '...';
     document.getElementById('up-speed').textContent = '...';
+    document.getElementById('ping').style.display = '...';
 
     fetch('/speed_test')
         .then(response => response.json())
@@ -122,9 +123,11 @@ document.getElementById('start-speed-test').addEventListener('click', function()
             if (data.download_speed && data.upload_speed) {
                 document.getElementById('down-speed').textContent = data.download_speed + ' Mbps';
                 document.getElementById('up-speed').textContent = data.upload_speed + ' Mbps';
+                document.getElementById('ping').textContent = data.ping + ' ms';
             } else {
                 document.getElementById('down-speed').textContent = 'Error';
                 document.getElementById('up-speed').textContent = 'Error';
+                document.getElementById('ping').textContent = 'Error';
             }
         })
         .catch(error => {
@@ -132,5 +135,6 @@ document.getElementById('start-speed-test').addEventListener('click', function()
             document.getElementById('speed-test').style.display = 'none';
             document.getElementById('down-speed').textContent = 'Error';
             document.getElementById('up-speed').textContent = 'Error';
+            document.getElementById('ping').textContent = 'Error';
         });
 });
