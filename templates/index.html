@@ -14,9 +14,9 @@
         <div class="metric">
             <h2>CPU</h2>
             <p>Usage: <span id="cpu-usage">Loading...</span>%</p>
-            <p>Frequency (Current): <span id="cpu-frequency-current">Loading...</span> MHz</p>
-            <p>Frequency (Min): <span id="cpu-frequency-min">Loading...</span> MHz</p>
-            <p>Frequency (Max): <span id="cpu-frequency-max">Loading...</span> MHz</p>
+            <p>Current: <span id="cpu-frequency-current">Loading...</span> MHz</p>
+            <p>Min: <span id="cpu-frequency-min">Loading...</span> MHz</p>
+            <p>FMax: <span id="cpu-frequency-max">Loading...</span> MHz</p>
             <p>Temperature: <span id="cpu-temperature">Loading...</span>°C</p>
         </div>
         <div class="metric">
@@ -46,14 +46,23 @@
             <p>Temperature: <span id="gpu-temperature">Loading...</span>°C</p>
             <p>Utilization: <span id="gpu-utilization">Loading...</span>%</p>
         </div>
+        <div class="speed-test">
+            <h2>Internet Speed</h2>
+            <p>Download: <span id="down-speed">...</span></p>
+            <p>Upload: <span id="up-speed">...</span></p>
+            
+            <div>
+                <button id="start-speed-test">Speed Test</button>
+                <p id="speed-test" class="loading-message" style="display: none;">Please wait, testing the connection...</p>
+            </div>
+        </div>
         <div class="volume-controls">
             <h2>Vloume</h2>
-            <button id="increase-volume">+ 10%</button>
-            <button id="decrease-volume">- 10%</button>
+            <button id="increase-volume">+ 5%</button>
+            <button id="decrease-volume">- 5%</button>
             <button id="mute">Mute</button>
             <button id="unmute">Unmute</button>
         </div>
-        
     </div>
     <script>
         // Show a popup with the IP address

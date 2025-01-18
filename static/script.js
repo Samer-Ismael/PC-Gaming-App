@@ -109,3 +109,29 @@ document.getElementById("clear-temp-files").addEventListener("click", () => {
             alert("An error occurred while clearing temp files.");
         });
 });
+
+document.getElementById('start-speed-test').addEventListener('click', function() {
+    document.getElementById('speed-test').style.display = 'block';
+    document.getElementById('down-speed').textContent = '...';
+    document.getElementById('up-speed').textContent = '...';
+
+    fetch('/speed_test')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('speed-test').style.display = 'none';
+
+            if (data.download_speed && data.upload_speed) {
+                document.getElementById('down-speed').textContent = data.download_speed + ' Mbps';
+                document.getElementById('up-speed').textContent = data.upload_speed + ' Mbps';
+            } else {
+                document.getElementById('down-speed').textContent = 'Error';
+                document.getElementById('up-speed').textContent = 'Error';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('speed-test').style.display = 'none';
+            document.getElementById('down-speed').textContent = 'Error';
+            document.getElementById('up-speed').textContent = 'Error';
+        });
+});
