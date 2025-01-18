@@ -2,10 +2,11 @@ from flask import Flask, jsonify, render_template, request
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
+from internet import speed_test
 from gpu import get_gpu_metrics, init_gpu
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
-from disk import get_disk_metrics
+from disk import get_disk_metrics, clear_temp_files
 import psutil
 import webbrowser
 import os
@@ -49,16 +50,25 @@ def get_ip_address():
 def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
 
+@app.route("/speed_test" , methods=["GET"])
+def internet_speed_test():
+    
+    return speed_test()
+
 #-------------------------------------------------------------------------------------
 @app.route("/")
 def index():
     ip_address = get_ip_address()
     return render_template("index.html", ip_address=ip_address)
 
+
 @app.route("/metrics")
 def metrics():
     try:
         cpu_usage = psutil.cpu_percent(interval=1)
+        cpu_freq = psutil.cpu_freq()
+        current = cpu_freq.current
+        max = cpu_freq.max
         ram_metrics = get_ram_metrics()
         disk_metrics = get_disk_metrics()
         gpu_metrics = get_gpu_metrics()
@@ -66,6 +76,8 @@ def metrics():
         return jsonify({
             "cpu": {
                 "usage": cpu_usage,
+                "Frequency-curent": current,
+                "Frequency-max": max,
                 "temperature": get_cpu_temperature(),
             },
             "ram": ram_metrics,
@@ -75,7 +87,12 @@ def metrics():
     except Exception as e:
         print(f"Error fetching metrics: {e}")
         return jsonify({
-            "cpu": {"usage": "Unavailable", "temperature": "Unavailable"},
+            "cpu": {
+                "usage": "Unavailable", 
+                "temperature": "Unavailable", 
+                "frequency_current": "Unavailable", 
+                "frequency_max": "Unavailable",
+            },            
             "ram": {"usage": "Unavailable", "total": "Unavailable", "free": "Unavailable"},
             "disk": {"usage": "Unavailable", "free_space": "Unavailable"},
             "gpu": {"name": "Unavailable", "temperature": "Unavailable", "utilization": "Unavailable"},
@@ -84,7 +101,7 @@ def metrics():
 @app.route('/volume/increase', methods=['POST'])
 def increase_volume():
     try:
-        press_volume_key(0xAF, 5)  # VK_VOLUME_UP
+        press_volume_key(0xAF, 2)  # VK_VOLUME_UP
         return jsonify({"message": "Volume increased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -92,7 +109,7 @@ def increase_volume():
 @app.route('/volume/decrease', methods=['POST'])
 def decrease_volume():
     try:
-        press_volume_key(0xAE, 5)  # VK_VOLUME_DOWN
+        press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
         return jsonify({"message": "Volume decreased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -113,7 +130,6 @@ def unmute():
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
-'''
 @app.route("/clear_cache", methods=["POST"])
 def clear_cache():
     try:
@@ -121,7 +137,15 @@ def clear_cache():
         return jsonify({"message": "Standby memory cleared successfully."}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-'''
+    
+    
+@app.route("/clear_temp_files", methods=["POST"])
+def clear_temp_files_route():
+    try:
+        clear_temp_files()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 #-------------------------------------------------------------------------------------
 
 
