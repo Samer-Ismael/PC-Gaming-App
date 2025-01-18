@@ -35,15 +35,14 @@ def get_cpu_temperature_metrics():
     if cpu_temp is not None:
         return cpu_temp
     else:
-        cpu_temp_intel = cpu.get_cpu_temperature_intel()
-
-        if cpu_temp_intel is not None:
-            return cpu_temp_intel
+        cpu_temp_wmi = cpu.get_cpu_temperature_wmi()
+        if cpu_temp_wmi is not None:
+            return cpu_temp_wmi
         else:
-            cpu_temp_wmi = cpu.get_cpu_temperature_wmi()
+            cpu_temp_intel = cpu.get_cpu_temperature_intel()
 
-            if cpu_temp_wmi is not None:
-                return cpu_temp_wmi
+            if cpu_temp_intel is not None:
+                return cpu_temp_intel
             else:
                 return "Unable to retrieve CPU temperature."
 
