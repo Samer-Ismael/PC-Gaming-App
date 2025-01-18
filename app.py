@@ -3,7 +3,7 @@ from flask import Flask, jsonify, render_template, request
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
-from gpu import get_gpu_metrics, init_gpu, set_gpu_fan_speed_to_max
+from gpu import get_gpu_metrics, init_gpu
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
 from disk import get_disk_metrics, clear_temp_files
