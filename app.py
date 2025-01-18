@@ -113,6 +113,7 @@ def unmute():
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
 
+'''
 @app.route("/clear_cache", methods=["POST"])
 def clear_cache():
     try:
@@ -120,6 +121,7 @@ def clear_cache():
         return jsonify({"message": "Standby memory cleared successfully."}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+'''
 #-------------------------------------------------------------------------------------
 
 
