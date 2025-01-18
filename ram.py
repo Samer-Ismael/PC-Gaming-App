@@ -12,15 +12,28 @@ def get_ram_metrics():
         "free": round(ram.available / (1024 ** 3), 2),
     }
 
+
+def print_memory_info():
+    mem = psutil.virtual_memory()
+    print(f"Total: {mem.total // (1024 ** 2)} MB")
+    print(f"Available: {mem.available // (1024 ** 2)} MB")
+    print(f"Used: {mem.used // (1024 ** 2)} MB")
+    return mem
+
 def clear_cache_mem():
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    rammap_path = os.path.join(current_dir, 'lib', 'RAMMap.exe')
+    path = os.path.join(current_dir, 'lib', 'EmptyStandbyList.exe')
     
     
-    if os.path.exists(rammap_path):
+    if os.path.exists(path):
             try:
-                subprocess.run([rammap_path, '-Et'], check=True)
+                print("Before: ")
+                print_memory_info
+                subprocess.run([path, "standbylist"], check=True)
+                print ("After: ")
+                print_memory_info
+                
                 print("Standby list cleared successfully!")
             except subprocess.CalledProcessError as e:
                 print(f"Error clearing standby list: {e}")
