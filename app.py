@@ -2,7 +2,6 @@ from flask import Flask, jsonify, render_template, request
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
-from internet import speed_test
 from gpu import get_gpu_metrics, init_gpu
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
@@ -11,6 +10,8 @@ import psutil
 import webbrowser
 import os
 import ctypes
+import speedtest
+
 
 app = Flask(__name__)
 
@@ -51,9 +52,21 @@ def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
 
 @app.route("/speed_test" , methods=["GET"])
-def internet_speed_test():
-    
-    return speed_test()
+def speed_test():
+    try:
+        st = speedtest.Speedtest()
+        st.get_best_server()
+
+        download_speed = st.download() / 1_000_000  
+        upload_speed = st.upload() / 1_000_000 
+
+        return jsonify({
+            "download_speed": f"{download_speed:.2f}",
+            "upload_speed": f"{upload_speed:.2f}"
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 #-------------------------------------------------------------------------------------
 @app.route("/")
