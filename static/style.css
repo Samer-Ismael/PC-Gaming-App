@@ -1,166 +1,101 @@
-.volume-controls button {
-    background-color:rgb(86, 76, 175); /* Green background */
-    border: none;              /* Remove borders */
-    color: white;              /* White text */
-    padding: 15px 32px;        /* Padding */
-    text-align: center;        /* Centered text */
-    text-decoration: none;     /* Remove underline */
-    display: inline-block;     /* Inline-block */
-    font-size: 16px;           /* Increase font size */
-    margin: 4px 2px;           /* Margin */
-    cursor: pointer;           /* Pointer cursor on hover */
-    border-radius: 8px;        /* Rounded corners */
-    transition: background-color 0.3s; /* Smooth transition */
+/* Color Theme */
+:root {
+    --primary-color: #0066cc; /* Blue for accents */
+    --secondary-color: #e6f2ff; /* Light blue for card backgrounds */
+    --background-color: #f9f9f9; /* Light gray for the overall background */
+    --text-color: #333333; /* Dark gray for text */
+    --border-color: #cccccc; /* Light gray for borders */
+    --highlight-color: #004080; /* Darker blue for hover effects */
 }
 
-/* Button Styling */
-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color:rgb(86, 76, 175);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-button:hover {
-    background-color: #45a049; /* Darker green when hovered */
-    transform: scale(1.05); /* Slightly enlarge the button */
-}
-
-button:active {
-    transform: scale(0.98); /* Shrink the button on click */
-}
-
-/* Button container (to center the button) */
-.metric div {
-    text-align: left;
-}
-
-.volume-controls i {
-    margin-right: 8px; /* Space between icon and text */
-}
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    background-color: var(--background-color);
     margin: 0;
     padding: 0;
-    background-color: rgb(154, 154, 156);
-    color: #333;
+    color: var(--text-color);
 }
 
-/* Header Styling */
 header {
-    background-color: rgb(86, 76, 175);
-    color: white;
-    padding: 15px;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    padding: 20px;
     text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Footer Styling */
-footer {
-    text-align: center;
-    margin-top: 20px;
-    font-size: 12px;
-    color: #666;
-}
-
-/* Container Styling */
-.container {
-    max-width: 900px;
-    margin: 20px auto;
-    padding: 15px;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 8px;
-}
-
-/* Metric Section Styling */
-.metric {
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
-}
-
-.metric:last-child {
-    border-bottom: none;
-}
-
-.metric h2,
-.volume-controls,
-.speed-test h2 {
-    font-size: 18px;
+header h1 {
     margin: 0;
-    color: rgb(175, 112, 76);
+    font-size: 2.5rem;
 }
 
-.metric p {
-    margin: 5px 0;
+header h4 {
+    margin: 5px 0 0;
+    font-size: 1rem;
 }
 
-.metric div {
-    text-align: left;
+a {
+    color: #ffffff;
+    text-decoration: underline;
 }
 
-/* Icon Styling for Volume Controls */
-.volume-controls i {
-    margin-right: 8px; /* Space between icon and text */
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
-/* ----------------------------------------
-   Button Styling
----------------------------------------- */
+.card {
+    background-color: var(--secondary-color);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex: 1 1 calc(33% - 40px);
+    max-width: calc(33% - 40px);
+    padding: 20px;
+    min-width: 300px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
-/* General Button Styling */
-button {
-    padding: 10px 20px;
-    font-size: 16px;
-    background-color: rgb(86, 76, 175); /* Purple color */
-    color: white;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.card h2 {
+    margin: 0 0 15px;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 5px;
+}
+
+.card p {
+    font-size: 1rem;
+    margin: 10px 0;
+}
+
+.card button {
+    background-color: var(--primary-color);
+    color: #ffffff;
     border: none;
     border-radius: 5px;
+    padding: 10px 15px;
+    font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease;
 }
 
-/* Hover and Active Button States */
-button:hover {
-    background-color: #45a049; /* Darker green when hovered */
-    transform: scale(1.05); /* Slightly enlarge the button */
+.card button:hover {
+    background-color: var(--highlight-color);
 }
 
-button:active {
-    transform: scale(0.98); /* Shrink the button on click */
-}
-
-/* Volume Controls Button Styling */
-.volume-controls button {
-    background-color: rgb(86, 76, 175); /* Same purple for consistency */
-    border-radius: 8px;
-    padding: 15px 32px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-/* ----------------------------------------
-   Responsive Styles
----------------------------------------- */
-
-/* Mobile Styles for Header and Metrics */
-@media (max-width: 600px) {
-    header {
-        font-size: 18px;
-    }
-
-    .metric h2 {
-        font-size: 16px;
-    }
-
-    /* Full-width buttons on smaller screens */
-    .volume-controls button {
-        width: 100%; /* Full width on small screens */
-        font-size: 14px; /* Smaller text size */
-        padding: 10px; /* Adjust padding */
-    }
+.loading-message {
+    font-style: italic;
+    color: var(--text-color);
+    margin-top: 10px;
 }

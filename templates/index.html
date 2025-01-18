@@ -9,67 +9,53 @@
 <body>
     <header>
         <h1>Smokey & Lemoneh</h1>
-        <h4>To use the same page on your phone use this link: 'http://{{ ip_address }}:5000'</h4>
+        <h4>Access this page on your phone: <a href="http://{{ ip_address }}:5000">http://{{ ip_address }}:5000</a></h4>
     </header>
     <div class="container">
-        <div class="metric">
+        <div class="card">
             <h2>CPU</h2>
             <p>Usage: <span id="cpu-usage">Loading...</span>%</p>
             <p>Current: <span id="cpu-frequency-current">Loading...</span> MHz</p>
             <p>Max: <span id="cpu-frequency-max">Loading...</span> MHz</p>
             <p>Temperature: <span id="cpu-temperature">Loading...</span>°C</p>
         </div>
-        <div class="metric">
+        <div class="card">
             <h2>RAM</h2>
             <p>Usage: <span id="ram-usage">Loading...</span>%</p>
             <p>Total: <span id="ram-total">Loading...</span> GB</p>
             <p>Free: <span id="ram-free">Loading...</span> GB</p>
-            
-            <div>
-                <button id="clear-cache">Clear Cache</button>
-                <p id="loading-message" style="display: none;">Please wait, clearing memory...</p>
-            </div>            
-            
+            <button id="clear-cache">Clear Cache</button>
+            <p id="loading-message" class="loading-message" style="display: none;">Please wait, clearing memory...</p>
         </div>
-        <div class="metric">
+        <div class="card">
             <h2>Disk</h2>
             <p>Usage: <span id="disk-usage">Loading...</span>%</p>
             <p>Free Space: <span id="disk-free">Loading...</span> GB</p>
-            <div>
-                <button id="clear-temp-files">Clear Temp Files</button>
-                <p id="disk-loading-message" style="display: none;">Please wait, clearing temporary files...</p>
-            </div>
+            <button id="clear-temp-files">Clear Temp Files</button>
+            <p id="disk-loading-message" class="loading-message" style="display: none;">Please wait, clearing temporary files...</p>
         </div>
-        <div class="metric">
+        <div class="card">
             <h2>GPU</h2>
             <p>Name: <span id="gpu-name">Loading...</span></p>
             <p>Temperature: <span id="gpu-temperature">Loading...</span>°C</p>
             <p>Utilization: <span id="gpu-utilization">Loading...</span>%</p>
         </div>
-        <div class="metric">
+        <div class="card">
             <h2>Internet Speed</h2>
-            <p>Download: <span id="down-speed">...</span></p>
-            <p>Upload: <span id="up-speed">...</span></p>
-            <p>ping: <span id="ping">...</span></p>
-            <div>
-                <button id="start-speed-test">Speed Test</button>
-                <p id="speed-test" class="loading-message" style="display: none;">Please wait, testing the connection...</p>
-            </div>
+            <p>Download: <span id="down-speed">Loading...</span></p>
+            <p>Upload: <span id="up-speed">Loading...</span></p>
+            <p>Ping: <span id="ping">Loading...</span></p>
+            <button id="start-speed-test">Start Speed Test</button>
+            <p id="speed-test" class="loading-message" style="display: none;">Please wait, testing the connection...</p>
         </div>
-        <div class="volume-controls">
-            <h2>Vloume</h2>
+        <div class="card">
+            <h2>Volume Controls</h2>
             <button id="increase-volume">+ 5%</button>
             <button id="decrease-volume">- 5%</button>
             <button id="mute">Mute</button>
             <button id="unmute">Unmute</button>
         </div>
     </div>
-    <script>
-        // Show a popup with the IP address
-        window.onload = function() {
-            const ipAddress = "{{ ip_address }}";  // Flask will inject the IP address here
-        }
-    </script>
     
     <script src="/static/script.js"></script>
 </body>
