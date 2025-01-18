@@ -5,7 +5,7 @@ from werkzeug.serving import WSGIRequestHandler
 from gpu import get_gpu_metrics, init_gpu
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
-from disk import get_disk_metrics
+from disk import get_disk_metrics, clear_temp_files
 import psutil
 import webbrowser
 import os
@@ -120,6 +120,15 @@ def clear_cache():
         return jsonify({"message": "Standby memory cleared successfully."}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+    
+@app.route("/clear_temp_files", methods=["POST"])
+def clear_temp_files_route():
+    try:
+        clear_temp_files()
+        return jsonify({"status": "success"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 #-------------------------------------------------------------------------------------
 
 
