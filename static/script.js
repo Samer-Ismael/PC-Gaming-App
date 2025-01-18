@@ -5,6 +5,9 @@ function fetchMetrics() {
         .then(response => response.json())
         .then(data => {
             document.getElementById('cpu-usage').textContent = data.cpu.usage;
+            document.getElementById('cpu-frequency-current').textContent = `${data.cpu["Frequency-curent"]}`;
+            document.getElementById('cpu-frequency-min').textContent = `${data.cpu["Frequency-min"]}`;
+            document.getElementById('cpu-frequency-max').textContent = `${data.cpu["Frequency-max"]}`;
             document.getElementById('cpu-temperature').textContent = data.cpu.temperature;
             document.getElementById('ram-usage').textContent = data.ram.usage;
             document.getElementById('ram-total').textContent = data.ram.total;
