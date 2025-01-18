@@ -20,10 +20,9 @@ function fetchMetrics() {
         .catch(error => console.error('Error fetching metrics:', error));
 }
 
-setInterval(fetchMetrics, 2000);  // Fetch metrics every 2 seconds
+setInterval(fetchMetrics, 1000);  
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Attach event listeners to buttons
     document.getElementById('increase-volume').addEventListener('click', () => {
         fetch('/volume/increase', { method: 'POST' })
             .then(response => response.json())
@@ -113,7 +112,7 @@ document.getElementById('start-speed-test').addEventListener('click', function()
     document.getElementById('speed-test').style.display = 'block';
     document.getElementById('down-speed').textContent = '...';
     document.getElementById('up-speed').textContent = '...';
-    document.getElementById('ping').style.display = '...';
+    document.getElementById('ping').textContent = '...';
 
     fetch('/speed_test')
         .then(response => response.json())

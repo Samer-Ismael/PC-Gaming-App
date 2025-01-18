@@ -11,6 +11,8 @@ import webbrowser
 import os
 import ctypes
 import speedtest
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
+from comtypes import CLSCTX_ALL
 
 
 app = Flask(__name__)
@@ -27,8 +29,11 @@ def press_volume_key(key_code, times=1):
         ctypes.windll.user32.keybd_event(key_code, 0, 0, 0)
         ctypes.windll.user32.keybd_event(key_code, 0, 2, 0)  # Key release
 
-def get_cpu_temperature():
-    return cpu.get_temperatures()
+def get_cpu_temperature_metrics():
+    if cpu.get_cpu_temperature() is None:
+        return cpu.get_cpu_temperature_intel()
+    else:
+        return cpu.get_cpu_temperature()
 
 @app.after_request
 def log_bad_requests(response):
@@ -51,6 +56,12 @@ def get_ip_address():
 def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
 
+def get_audio_endpoint():
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(
+        IAudioEndpointVolume._iid_, CLSCTX_ALL, None
+    )
+    return interface.QueryInterface(IAudioEndpointVolume)
 
 #-------------------------------------------------------------------------------------
 @app.route("/")
@@ -94,7 +105,7 @@ def metrics():
                 "usage": cpu_usage,
                 "Frequency-curent": current,
                 "Frequency-max": max,
-                "temperature": get_cpu_temperature(),
+                "temperature": get_cpu_temperature_metrics(),
             },
             "ram": ram_metrics,
             "disk": disk_metrics,
@@ -133,7 +144,8 @@ def decrease_volume():
 @app.route('/volume/mute', methods=['POST'])
 def mute():
     try:
-        ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
+        endpoint = get_audio_endpoint()
+        endpoint.SetMute(1, None)  # 1 = Mute
         return jsonify({"message": "Volume muted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -141,7 +153,8 @@ def mute():
 @app.route('/volume/unmute', methods=['POST'])
 def unmute():
     try:
-        ctypes.windll.user32.SendMessageW(0xFFFF, 0x319, 0, 0x80000)
+        endpoint = get_audio_endpoint()
+        endpoint.SetMute(0, None)  # 0 = Unmute
         return jsonify({"message": "Volume unmuted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500

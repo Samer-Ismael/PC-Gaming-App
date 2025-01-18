@@ -2,6 +2,8 @@ import os
 import sys
 import ctypes
 import clr
+import wmi
+
 
 def is_admin():
     """Check if the script is running with administrator privileges."""
@@ -30,24 +32,37 @@ clr.AddReference(dll_path)
 
 from OpenHardwareMonitor import Hardware
 
-def get_temperatures():
+def get_cpu_temperature():
     hw = Hardware.Computer()
     hw.CPUEnabled = True
-    hw.GPUEnabled = True
     hw.Open()
 
     cpu_temp = None
 
     for i in hw.Hardware:
-        i.Update()  
-        for sensor in i.Sensors:
-           
-            if sensor.SensorType == Hardware.SensorType.Temperature and i.HardwareType == Hardware.HardwareType.CPU:
-                if sensor.Name == "CPU Package":
+        i.Update() 
+        if i.HardwareType == Hardware.HardwareType.CPU:
+            for sensor in i.Sensors:
+                if sensor.SensorType == Hardware.SensorType.Temperature:
                     cpu_temp = sensor.Value
-           
-            if sensor.SensorType == Hardware.SensorType.Temperature and i.HardwareType == Hardware.HardwareType.GpuNvidia:
-                if sensor.Name == "GPU Core":
-                    gpu_temp = sensor.Value
+                    break  
+        if cpu_temp is not None:
+            break  
 
     return cpu_temp
+
+def get_cpu_temperature_intel():
+    try:
+        w = wmi.WMI(namespace="root\\WMI")
+        sensors = w.query("SELECT * FROM MSSensor")
+
+        cpu_temp = None
+
+        for sensor in sensors:
+            if sensor.SensorType == "Temperature" and "CPU" in sensor.Name:
+                cpu_temp = float(sensor.CurrentReading) / 10 
+
+        return cpu_temp
+    except Exception as e:
+        print(f"Error retrieving CPU temperature: {e}")
+        return None
