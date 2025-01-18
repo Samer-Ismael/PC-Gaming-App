@@ -87,7 +87,8 @@ footer {
 }
 
 .metric h2,
-.volume-controls {
+.volume-controls,
+.speed-test h2 {
     font-size: 18px;
     margin: 0;
     color: rgb(175, 112, 76);
