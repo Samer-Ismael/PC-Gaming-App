@@ -50,8 +50,6 @@ def get_cpu_temperature():
 
     return cpu_temp
 
-import wmi
-
 def get_cpu_temperature_wmi():
     try:
         w = wmi.WMI(namespace="root\wmi")

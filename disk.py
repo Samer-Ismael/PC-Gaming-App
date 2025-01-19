@@ -27,8 +27,7 @@ def delete_files_in_directory(directory):
                     print(f"Failed to delete {file_path}: {e}")
 
         print(f"Skipped {number} files because they were in use.")
-            
-            
+                  
 def clear_temp_files():
     temp_dir = tempfile.gettempdir()
     app_data_temp_dir = os.path.join(os.getenv('APPDATA'), 'Local', 'Temp')

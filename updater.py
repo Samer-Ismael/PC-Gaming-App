@@ -30,7 +30,6 @@ def get_latest_tag_name():
     except Exception as e:
         print(f"Error occurred: {e}")
         return None
-    
            
 def get_download_url():
     url = "https://api.github.com/repos/Samer-Ismael/PC-Gaming-App/releases/latest"
@@ -48,15 +47,11 @@ def get_download_url():
     else:
         print(f"Failed to fetch release data. Status code: {response.status_code}")
 
-
-
 GITHUB_VERSION = get_latest_tag_name()
 EXE_URL = get_download_url()
 
 def check_update():
     return get_latest_tag_name() != APP_VERSION
-
-
 
 def update_app():
     """
@@ -94,7 +89,6 @@ def update_app():
         sys.exit()
     except Exception as e:
         print(f"Error during update: {e}")
-
 
 if check_update():
     print("Update available. Updating the app...")

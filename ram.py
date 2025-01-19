@@ -14,8 +14,6 @@ def get_ram_metrics():
         "free": round(ram.available / (1024 ** 3), 2),
     }
 
-
-
 def clear_cache_mem():
     
     current_dir = os.path.dirname(os.path.abspath(__file__))

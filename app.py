@@ -188,7 +188,6 @@ def clear_temp_files_route():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
     
-    
 @app.route('/get-app-version', methods=['GET'])
 def get_app_version():
     """
@@ -196,16 +195,13 @@ def get_app_version():
     """
     return jsonify({'version': updater.APP_VERSION})
 
-
 @app.route('/check-update', methods=['GET'])
 def check_update():
     """
     Endpoint to check if an update is available.
     """
     is_update_available = updater.check_update()
-    print (updater.check_update())
     return jsonify(is_update_available)
-
 
 @app.route('/update', methods=['POST'])
 def update():
