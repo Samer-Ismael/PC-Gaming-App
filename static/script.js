@@ -137,3 +137,48 @@ document.getElementById('start-speed-test').addEventListener('click', function()
             document.getElementById('ping').textContent = 'Error';
         });
 });
+
+function checkForUpdates() {
+    fetch('/check-update')
+        .then(response => response.json())
+        .then(data => {
+            if (data === true) {
+                document.getElementById('update-message').style.display = 'block';
+            } else {
+                document.getElementById('update-message').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for updates:', error);
+        });
+}
+
+setInterval(checkForUpdates, 7200000);
+
+function updateApp() {
+    fetch('/update', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.status);
+            alert(data.status);
+        })
+        .catch(error => {
+            console.error('Error during the update process:', error);
+            alert('An error occurred while updating the app.');
+        });
+}
+
+function displayAppVersion() {
+    fetch('/get-app-version')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('app-version').innerText = `App Version: ${data.version}`;
+        })
+        .catch(error => {
+            console.error('Error fetching app version:', error);
+        });
+}
+
+window.onload = function() {
+    displayAppVersion();
+};

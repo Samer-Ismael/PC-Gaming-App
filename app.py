@@ -1,3 +1,5 @@
+import subprocess
+import sys
 from flask import Flask, jsonify, render_template, request
 import socket
 import logging
@@ -13,6 +15,7 @@ import ctypes
 import speedtest
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from comtypes import CLSCTX_ALL
+import updater
 
 
 app = Flask(__name__)
@@ -74,6 +77,30 @@ def get_audio_endpoint():
     )
     return interface.QueryInterface(IAudioEndpointVolume)
 
+def restart_app():
+    """
+    Endpoint to trigger the app restart process.
+    """
+    try:
+        current_exe_path = os.path.join(os.getcwd(), 'app.exe')
+
+        powershell_script = f"""
+        # PowerShell script to restart the app
+        Start-Process -FilePath "{current_exe_path}"
+        exit
+        """
+
+        script_path = os.path.join(os.getcwd(), 'restart_script.ps1')
+        with open(script_path, 'w') as file:
+            file.write(powershell_script)
+
+        subprocess.Popen(['powershell', '-ExecutionPolicy', 'Bypass', '-File', script_path])
+
+        sys.exit()
+
+        return jsonify({'status': 'Restarting the app...'}), 200
+    except Exception as e:
+        return jsonify({'status': f'Error during restart: {e}'}), 500
 #-------------------------------------------------------------------------------------
 @app.route("/")
 def index():
@@ -184,8 +211,38 @@ def clear_temp_files_route():
         return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-#-------------------------------------------------------------------------------------
+    
+    
+@app.route('/get-app-version', methods=['GET'])
+def get_app_version():
+    """
+    Endpoint to retrieve the current app version.
+    """
+    return jsonify({'version': updater.APP_VERSION})
 
+
+@app.route('/check-update', methods=['GET'])
+def check_update():
+    """
+    Endpoint to check if an update is available.
+    """
+    is_update_available = updater.check_update()
+    return jsonify(is_update_available)
+
+
+@app.route('/update', methods=['POST'])
+def update():
+    """
+    Endpoint to trigger the update process.
+    """
+    try:
+        restart_app()
+        
+        #updater.update_app()
+        return jsonify({'status': 'Updating...'}), 200
+    except Exception as e:
+        return jsonify({'status': f'Error during update: {e}'}), 500
+#-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
     ip_address = get_ip_address()
