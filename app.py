@@ -109,8 +109,7 @@ def metrics():
         max = cpu_freq.max
         ram_metrics = get_ram_metrics()
         disk_metrics = get_disk_metrics()
-        gpu_metrics = get_gpu_metrics()
-
+        gpu_metrics = get_gpu_metrics()        
         return jsonify({
             "cpu": {
                 "usage": cpu_usage,

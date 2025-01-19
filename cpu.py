@@ -2,7 +2,6 @@ import os
 import sys
 import ctypes
 import clr
-import psutil
 import wmi
 
 def is_admin():
@@ -51,29 +50,20 @@ def get_cpu_temperature():
 
     return cpu_temp
 
-def get_cpu_temperature_intel():
-    try:
-        temps = psutil.sensors_temperatures()
-        if "coretemp" in temps:
-            cpu_temp = temps["coretemp"][0].current  
-            return cpu_temp
-        else:
-            return "Temperature data not available"
-    except Exception as e:
-        return f"Error retrieving CPU temperature: {e}"
-    
+import wmi
 
 def get_cpu_temperature_wmi():
     try:
-        w = wmi.WMI()
+        w = wmi.WMI(namespace="root\wmi")
+        temperature_info = w.MSAcpi_ThermalZoneTemperature()
 
-        probes = w.query("SELECT * FROM Win32_TemperatureProbe")
+        if temperature_info:
+            for temp in temperature_info:
+                temp_celsius = (temp.CurrentTemperature / 10) - 273.15
+                return temp_celsius
+        else:
+            return "Temperature information not available for the CPU."
 
-        for probe in probes:
-            if probe.CurrentReading is not None:
-                temp = (probe.CurrentReading / 10.0) - 273.15
-                return temp
-        
-        return "CPU temperature data not available."
     except Exception as e:
         return f"Error retrieving CPU temperature: {e}"
+
