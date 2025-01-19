@@ -153,6 +153,8 @@ function checkForUpdates() {
         });
 }
 
+setInterval(checkForUpdates, 30000);
+
 function updateApp() {
     fetch('/update', { method: 'POST' })
         .then(response => response.json())
@@ -166,4 +168,17 @@ function updateApp() {
         });
 }
 
-setInterval(checkForUpdates, 30000); // 30 seconds
+function displayAppVersion() {
+    fetch('/get-app-version')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('app-version').innerText = `App Version: ${data.version}`;
+        })
+        .catch(error => {
+            console.error('Error fetching app version:', error);
+        });
+}
+
+window.onload = function() {
+    displayAppVersion();
+};

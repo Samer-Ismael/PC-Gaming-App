@@ -5,7 +5,7 @@ import requests
 
 
 
-APP_VERSION = "1.3.0"
+APP_VERSION = "1.3.1"
 
 def get_latest_tag_name():
     try:
@@ -47,27 +47,47 @@ GITHUB_VERSION = get_latest_tag_name()
 EXE_URL = get_download_url()
 
 def check_update():
-    return GITHUB_VERSION != APP_VERSION
+    return get_latest_tag_name() != APP_VERSION
+
 
 
 def update_app():
+    """
+    Generate a PowerShell script to update the app and execute it.
+    """
+    latest_version = get_latest_tag_name()  
+    exe_url = get_download_url() 
+    
+    if not exe_url:
+        print("Failed to retrieve the download URL. Aborting update.")
+        return
+
     current_exe_path = os.path.join(os.getcwd(), "app.exe")
-    
-    update_script = os.path.join(os.getcwd(), "update_script.ps1")
-    
-    powershell_script_content = f'''
+    update_script_path = os.path.join(os.getcwd(), "update_script.ps1")
+
+    powershell_script_content = f"""
+    # Remove the old app
     Remove-Item -Path "{current_exe_path}" -Force
-    Invoke-WebRequest -Uri "{EXE_URL}" -OutFile "{current_exe_path}"
+
+    # Download the new app
+    Invoke-WebRequest -Uri "{exe_url}" -OutFile "{current_exe_path}"
+
+    # Launch the new app
     Start-Process -FilePath "{current_exe_path}"
+
+    # Exit PowerShell
     exit
-    '''
+    """
 
-    with open(update_script, "w") as file:
-        file.write(powershell_script_content)
+    try:
+        with open(update_script_path, "w") as script_file:
+            script_file.write(powershell_script_content)
 
-    subprocess.Popen(["powershell", "-ExecutionPolicy", "Bypass", "-File", update_script])
+        subprocess.Popen(["powershell", "-ExecutionPolicy", "Bypass", "-File", update_script_path])
+        sys.exit()
+    except Exception as e:
+        print(f"Error during update: {e}")
 
-    sys.exit()
 
 if check_update():
     print("Update available. Updating the app...")
