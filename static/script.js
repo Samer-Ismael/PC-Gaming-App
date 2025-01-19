@@ -154,6 +154,9 @@ function checkForUpdates() {
 }
 
 setInterval(checkForUpdates, 7200000);
+window.onload = function() {
+    checkForUpdates();
+}
 
 function updateApp() {
     fetch('/update', { method: 'POST' })
