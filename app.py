@@ -77,30 +77,6 @@ def get_audio_endpoint():
     )
     return interface.QueryInterface(IAudioEndpointVolume)
 
-def restart_app():
-    """
-    Endpoint to trigger the app restart process.
-    """
-    try:
-        current_exe_path = os.path.join(os.getcwd(), 'app.exe')
-
-        powershell_script = f"""
-        # PowerShell script to restart the app
-        Start-Process -FilePath "{current_exe_path}"
-        exit
-        """
-
-        script_path = os.path.join(os.getcwd(), 'restart_script.ps1')
-        with open(script_path, 'w') as file:
-            file.write(powershell_script)
-
-        subprocess.Popen(['powershell', '-ExecutionPolicy', 'Bypass', '-File', script_path])
-
-        sys.exit()
-
-        return jsonify({'status': 'Restarting the app...'}), 200
-    except Exception as e:
-        return jsonify({'status': f'Error during restart: {e}'}), 500
 #-------------------------------------------------------------------------------------
 @app.route("/")
 def index():
@@ -227,6 +203,7 @@ def check_update():
     Endpoint to check if an update is available.
     """
     is_update_available = updater.check_update()
+    print (updater.check_update())
     return jsonify(is_update_available)
 
 
@@ -235,10 +212,8 @@ def update():
     """
     Endpoint to trigger the update process.
     """
-    try:
-        restart_app()
-        
-        #updater.update_app()
+    try:        
+        updater.update_app()
         return jsonify({'status': 'Updating...'}), 200
     except Exception as e:
         return jsonify({'status': f'Error during update: {e}'}), 500

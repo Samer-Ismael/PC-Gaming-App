@@ -153,10 +153,7 @@ function checkForUpdates() {
         });
 }
 
-setInterval(checkForUpdates, 7200000);
-window.onload = function() {
-    checkForUpdates();
-}
+setInterval(checkForUpdates, 900000);
 
 function updateApp() {
     fetch('/update', { method: 'POST' })

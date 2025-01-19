@@ -5,24 +5,31 @@ import requests
 
 
 
-APP_VERSION = "1.3.2"
+APP_VERSION = "1.3.3"
 
 def get_latest_tag_name():
+    """
+    Fetches the latest release tag from GitHub.
+    """
     try:
-        url = f"https://api.github.com/repos/Samer-Ismael/PC-Gaming-App/releases/latest"
-
+        url = "https://api.github.com/repos/Samer-Ismael/PC-Gaming-App/releases/latest"
         response = requests.get(url)
 
         if response.status_code == 200:
             release_data = response.json()
+            tag_name = release_data.get("tag_name", None)
 
-            tag_name = release_data.get("tag_name", "Tag name not found")
-
-            return tag_name
+            if tag_name:
+                return tag_name
+            else:
+                print("Tag name not found in the release data.")
+                return None
         else:
-            return f"Failed to fetch data: {response.status_code}"
+            print(f"Failed to fetch data: {response.status_code}")
+            return None
     except Exception as e:
-        return f"Error occurred: {e}"
+        print(f"Error occurred: {e}")
+        return None
     
            
 def get_download_url():
