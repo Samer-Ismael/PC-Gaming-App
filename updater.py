@@ -1,3 +1,6 @@
+import os
+import subprocess
+import sys
 import requests
 
 
@@ -30,12 +33,11 @@ def get_download_url():
     if response.status_code == 200:
         release_data = response.json()
         
-        for asset in release_data['assets']:
-            if asset['name'] == 'app.exe': 
-                download_url = asset['browser_download_url']
-
-                return download_url
-        print("EXE file not found in assets.")
+        if release_data['assets']:
+            download_url = release_data['assets'][0]['browser_download_url']
+            return download_url
+        else:
+            print("No assets found in the release.")
     else:
         print(f"Failed to fetch release data. Status code: {response.status_code}")
 
@@ -48,3 +50,27 @@ def check_update():
     return GITHUB_VERSION != APP_VERSION
 
 
+def update_app():
+    current_exe_path = os.path.join(os.getcwd(), "app.exe")
+    
+    update_script = os.path.join(os.getcwd(), "update_script.ps1")
+    
+    powershell_script_content = f'''
+    Remove-Item -Path "{current_exe_path}" -Force
+    Invoke-WebRequest -Uri "{EXE_URL}" -OutFile "{current_exe_path}"
+    Start-Process -FilePath "{current_exe_path}"
+    exit
+    '''
+
+    with open(update_script, "w") as file:
+        file.write(powershell_script_content)
+
+    subprocess.Popen(["powershell", "-ExecutionPolicy", "Bypass", "-File", update_script])
+
+    sys.exit()
+
+if check_update():
+    print("Update available. Updating the app...")
+    update_app()
+else:
+    print("No update available. You are running the latest version.")

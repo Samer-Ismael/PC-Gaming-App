@@ -152,3 +152,18 @@ function checkForUpdates() {
             console.error('Error checking for updates:', error);
         });
 }
+
+function updateApp() {
+    fetch('/update', { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.status);
+            alert(data.status);
+        })
+        .catch(error => {
+            console.error('Error during the update process:', error);
+            alert('An error occurred while updating the app.');
+        });
+}
+
+setInterval(checkForUpdates, 30000); // 30 seconds

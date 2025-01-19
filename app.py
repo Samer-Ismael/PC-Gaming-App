@@ -190,6 +190,11 @@ def clear_temp_files_route():
 def check_update():
     is_update_available = updater.check_update()
     return jsonify(is_update_available)
+
+@app.route('/update', methods=['POST'])
+def update():
+    updater.update()
+    return jsonify({'status': 'Restarting...'}), 200
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
