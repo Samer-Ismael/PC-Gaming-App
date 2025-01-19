@@ -13,6 +13,7 @@ import ctypes
 import speedtest
 from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
 from comtypes import CLSCTX_ALL
+import updater
 
 
 app = Flask(__name__)
@@ -184,8 +185,12 @@ def clear_temp_files_route():
         return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+    
+@app.route('/check-update')
+def check_update():
+    is_update_available = updater.check_update()
+    return jsonify(is_update_available)
 #-------------------------------------------------------------------------------------
-
 
 if __name__ == "__main__":
     ip_address = get_ip_address()

@@ -137,3 +137,18 @@ document.getElementById('start-speed-test').addEventListener('click', function()
             document.getElementById('ping').textContent = 'Error';
         });
 });
+
+function checkForUpdates() {
+    fetch('/check-update')
+        .then(response => response.json())
+        .then(data => {
+            if (data === true) {
+                document.getElementById('update-button').style.display = 'block';
+            } else {
+                document.getElementById('update-button').style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for updates:', error);
+        });
+}
