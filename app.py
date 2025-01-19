@@ -1,5 +1,3 @@
-import subprocess
-import sys
 from flask import Flask, jsonify, render_template, request
 import socket
 import logging
@@ -49,12 +47,6 @@ def get_cpu_temperature_metrics():
             else:
                 return "Unable to retrieve CPU temperature."
 
-@app.after_request
-def log_bad_requests(response):
-    if response.status_code not in [200, 304]:
-        print(f"Bad Request Logged: {request.method} {request.path} - Status {response.status_code}")
-    return response
-
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
@@ -66,10 +58,6 @@ def get_ip_address():
         s.close()
     return ip_address
 
-@app.before_first_request
-def startup_message():
-    print("\nThe app is running. Closing this window will stop the app.\n")
-
 def get_audio_endpoint():
     devices = AudioUtilities.GetSpeakers()
     interface = devices.Activate(
@@ -78,6 +66,16 @@ def get_audio_endpoint():
     return interface.QueryInterface(IAudioEndpointVolume)
 
 #-------------------------------------------------------------------------------------
+@app.after_request
+def log_bad_requests(response):
+    if response.status_code not in [200, 304]:
+        print(f"Bad Request Logged: {request.method} {request.path} - Status {response.status_code}")
+    return response
+
+@app.before_first_request
+def startup_message():
+    print("\nThe app is running. Closing this window will stop the app.\n")
+    
 @app.route("/")
 def index():
     ip_address = get_ip_address()
