@@ -143,9 +143,9 @@ function checkForUpdates() {
         .then(response => response.json())
         .then(data => {
             if (data === true) {
-                document.getElementById('update-button').style.display = 'block';
+                document.getElementById('update-message').style.display = 'block';
             } else {
-                document.getElementById('update-button').style.display = 'none';
+                document.getElementById('update-message').style.display = 'none';
             }
         })
         .catch(error => {
@@ -153,7 +153,7 @@ function checkForUpdates() {
         });
 }
 
-setInterval(checkForUpdates, 30000);
+setInterval(checkForUpdates, 7200000);
 
 function updateApp() {
     fetch('/update', { method: 'POST' })
