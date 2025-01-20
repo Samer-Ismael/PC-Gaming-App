@@ -9,12 +9,9 @@ from disk import get_disk_metrics, clear_temp_files
 import psutil
 import webbrowser
 import os
-import ctypes
 import speedtest
-from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
-from comtypes import CLSCTX_ALL
 import updater
-
+import media
 
 app = Flask(__name__)
 
@@ -23,29 +20,6 @@ log.setLevel(logging.ERROR)
 
 gpu_available = init_gpu()
 print(f"GPU Available: {gpu_available}")
-
-def press_volume_key(key_code, times=1):
-    """Simulates pressing a volume key."""
-    for _ in range(times):
-        ctypes.windll.user32.keybd_event(key_code, 0, 0, 0)
-        ctypes.windll.user32.keybd_event(key_code, 0, 2, 0)  # Key release
-
-def get_cpu_temperature_metrics():
-    cpu_temp = cpu.get_cpu_temperature()
-
-    if cpu_temp is not None:
-        return cpu_temp
-    else:
-        cpu_temp_wmi = cpu.get_cpu_temperature_wmi()
-        if cpu_temp_wmi is not None:
-            return cpu_temp_wmi
-        else:
-            cpu_temp_intel = cpu.get_cpu_temperature_intel()
-
-            if cpu_temp_intel is not None:
-                return cpu_temp_intel
-            else:
-                return "Unable to retrieve CPU temperature."
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -58,13 +32,6 @@ def get_ip_address():
         s.close()
     return ip_address
 
-def get_audio_endpoint():
-    devices = AudioUtilities.GetSpeakers()
-    interface = devices.Activate(
-        IAudioEndpointVolume._iid_, CLSCTX_ALL, None
-    )
-    return interface.QueryInterface(IAudioEndpointVolume)
-
 #-------------------------------------------------------------------------------------
 @app.after_request
 def log_bad_requests(response):
@@ -75,11 +42,15 @@ def log_bad_requests(response):
 @app.before_first_request
 def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
+    print ("IP Address:", get_ip_address())
     
 @app.route("/")
 def index():
     ip_address = get_ip_address()
     return render_template("index.html", ip_address=ip_address)
+
+# speed Test Endpoint
+#------------------------------------------------
 
 @app.route("/speed_test" , methods=["GET"])
 def speed_test():
@@ -101,6 +72,9 @@ def speed_test():
         print(f"Error during speed test: {str(e)}")
         return jsonify({"error": str(e)})
 
+# Metrics Endpoint
+#------------------------------------------------
+
 @app.route("/metrics")
 def metrics():
     try:
@@ -116,7 +90,7 @@ def metrics():
                 "usage": cpu_usage,
                 "Frequency-curent": current,
                 "Frequency-max": max,
-                "temperature": get_cpu_temperature_metrics(),
+                "temperature": cpu.get_cpu_temperature_metrics(),
             },
             "ram": ram_metrics,
             "disk": disk_metrics,
@@ -136,10 +110,13 @@ def metrics():
             "gpu": {"name": "Unavailable", "temperature": "Unavailable", "utilization": "Unavailable"},
         })
 
+# Audio Endpoint
+#------------------------------------------------
+
 @app.route('/volume/increase', methods=['POST'])
 def increase_volume():
     try:
-        press_volume_key(0xAF, 2)  # VK_VOLUME_UP
+        media.press_volume_key(0xAF, 2)  # VK_VOLUME_UP
         return jsonify({"message": "Volume increased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -147,7 +124,7 @@ def increase_volume():
 @app.route('/volume/decrease', methods=['POST'])
 def decrease_volume():
     try:
-        press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
+        media.press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
         return jsonify({"message": "Volume decreased successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
@@ -155,7 +132,7 @@ def decrease_volume():
 @app.route('/volume/mute', methods=['POST'])
 def mute():
     try:
-        endpoint = get_audio_endpoint()
+        endpoint = media.get_audio_endpoint()
         endpoint.SetMute(1, None)  # 1 = Mute
         return jsonify({"message": "Volume muted successfully"}), 200
     except Exception as e:
@@ -164,11 +141,14 @@ def mute():
 @app.route('/volume/unmute', methods=['POST'])
 def unmute():
     try:
-        endpoint = get_audio_endpoint()
+        endpoint = media.get_audio_endpoint()
         endpoint.SetMute(0, None)  # 0 = Unmute
         return jsonify({"message": "Volume unmuted successfully"}), 200
     except Exception as e:
         return jsonify({"message": f"Error: {str(e)}"}), 500
+
+# RAM Endpoint
+#------------------------------------------------
 
 @app.route("/clear_cache", methods=["POST"])
 def clear_cache():
@@ -177,7 +157,10 @@ def clear_cache():
         return jsonify({"message": "Standby memory cleared successfully."}), 200  
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-    
+
+# Disk Endpoint
+#------------------------------------------------
+
 @app.route("/clear_temp_files", methods=["POST"])
 def clear_temp_files_route():
     try:
@@ -185,7 +168,10 @@ def clear_temp_files_route():
         return jsonify({"status": "success"}), 200
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-    
+
+# Update Endpoint
+#------------------------------------------------
+
 @app.route('/get-app-version', methods=['GET'])
 def get_app_version():
     """

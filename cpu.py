@@ -65,3 +65,16 @@ def get_cpu_temperature_wmi():
     except Exception as e:
         return f"Error retrieving CPU temperature: {e}"
 
+
+def get_cpu_temperature_metrics():
+    cpu_temp = get_cpu_temperature()
+
+    if cpu_temp is not None:
+        return cpu_temp
+    else:
+        cpu_temp_wmi = get_cpu_temperature_wmi()
+        if cpu_temp_wmi is not None:
+            return cpu_temp_wmi
+        else:
+            return "Unable to retrieve CPU temperature."
+                

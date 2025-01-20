@@ -1,5 +1,3 @@
-import subprocess
-import time
 from pynvml import *
 
 def init_gpu():
