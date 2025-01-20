@@ -27,6 +27,7 @@ print("Running with administrator privileges.")
 
 dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'OpenHardwareMonitorLib.dll')
 
+
 clr.AddReference(dll_path)
 
 from OpenHardwareMonitor import Hardware
@@ -65,3 +66,15 @@ def get_cpu_temperature_wmi():
     except Exception as e:
         return f"Error retrieving CPU temperature: {e}"
 
+def get_cpu_temperature_metrics():
+    cpu_temp = get_cpu_temperature()
+
+    if cpu_temp is not None:
+        return cpu_temp
+    else:
+        cpu_temp_wmi = get_cpu_temperature_wmi()
+        if cpu_temp_wmi is not None:
+            return cpu_temp_wmi
+        else:
+            return "Unable to retrieve CPU temperature."
+                
