@@ -64,7 +64,7 @@ def update_app():
         print("Failed to retrieve the download URL. Aborting update.")
         return
 
-    current_exe_path = os.path.join(os.getcwd(), "app.exe")
+    current_exe_path = os.path.join(os.getcwd(), "Monitor.exe")
     update_script_path = os.path.join(os.getcwd(), "update_script.ps1")
 
     powershell_script_content = f"""
@@ -77,6 +77,8 @@ def update_app():
     # Launch the new app
     Start-Process -FilePath "{current_exe_path}"
 
+    # Remove script file
+    Remove-Item -Path "{update_script_path}" -Force
     # Exit PowerShell
     exit
     """
@@ -90,9 +92,9 @@ def update_app():
     except Exception as e:
         print(f"Error during update: {e}")
 
-def update_on_start():
-    if check_update():
-        print("Update available. Updating the app...")
-        update_app()
-    else:
-        print("You are running the latest version. " + APP_VERSION)
+
+if check_update():
+    print("Update available. Updating the app...")
+    update_app()
+else:
+    print("You are running the latest version. " + APP_VERSION)

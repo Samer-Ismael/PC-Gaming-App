@@ -222,7 +222,6 @@ def update():
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    updater.update_on_start()
     ip_address = get_ip_address()
     url = f'http://{ip_address}:5000'
 
