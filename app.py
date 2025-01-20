@@ -42,8 +42,15 @@ def log_bad_requests(response):
 @app.before_first_request
 def startup_message():
     print("\nThe app is running. Closing this window will stop the app.\n")
-    print ("IP Address:", get_ip_address())
     
+    ip_address = get_ip_address()
+    port = 5000
+    link = f"http://{ip_address}:{port}"
+    clickable_link = f"\033]8;;{link}\033\\{link}\033]8;;\033\\"
+    print ("*************************************************************")
+    print ("Use this link to open the page: ", clickable_link)
+    print ("*************************************************************")
+
 @app.route("/")
 def index():
     ip_address = get_ip_address()
