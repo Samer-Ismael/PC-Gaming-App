@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, send_from_directory
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
@@ -222,6 +222,7 @@ def update():
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
+    updater.update_on_start()
     ip_address = get_ip_address()
     url = f'http://{ip_address}:5000'
 

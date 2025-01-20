@@ -90,8 +90,9 @@ def update_app():
     except Exception as e:
         print(f"Error during update: {e}")
 
-if check_update():
-    print("Update available. Updating the app...")
-    update_app()
-else:
-    print("No update available. You are running the latest version.")
+def update_on_start():
+    if check_update():
+        print("Update available. Updating the app...")
+        update_app()
+    else:
+        print("You are running the latest version. " + APP_VERSION)
