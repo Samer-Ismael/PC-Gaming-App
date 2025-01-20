@@ -6,12 +6,12 @@ from gpu import get_gpu_metrics, init_gpu
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
 from disk import get_disk_metrics, clear_temp_files
+import updater
+import media
 import psutil
 import webbrowser
 import os
 import speedtest
-import updater
-import media
 
 app = Flask(__name__)
 
@@ -41,15 +41,30 @@ def log_bad_requests(response):
 
 @app.before_first_request
 def startup_message():
+    print ("*************************************************************")
     print("\nThe app is running. Closing this window will stop the app.\n")
     
     ip_address = get_ip_address()
     port = 5000
     link = f"http://{ip_address}:{port}"
     clickable_link = f"\033]8;;{link}\033\\{link}\033]8;;\033\\"
-    print ("*************************************************************")
     print ("Use this link to open the page: ", clickable_link)
+    
     print ("*************************************************************")
+
+    print(r"""
+        /\     /\
+       {  `---'  }
+       {  O   O  }
+       ~~>  V  <~~
+        \ \|/ /
+         `-----'____
+         /     \    \_
+        {       }\  )_\_   _
+        |  \_/  |/ /  \_\_/ )
+         \__/  /(_/     \__/
+           (__/
+    """)
 
 @app.route("/")
 def index():
