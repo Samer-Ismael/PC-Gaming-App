@@ -3,7 +3,6 @@ import sys
 import ctypes
 import clr
 import wmi
-from OpenHardwareMonitor import Hardware
 
 def is_admin():
     """Check if the script is running with administrator privileges."""
@@ -28,7 +27,10 @@ print("Running with administrator privileges.")
 
 dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'OpenHardwareMonitorLib.dll')
 
+
 clr.AddReference(dll_path)
+
+from OpenHardwareMonitor import Hardware
 
 def get_cpu_temperature():
     hw = Hardware.Computer()
