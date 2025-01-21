@@ -241,22 +241,32 @@ function showConfirmation(message, onConfirm) {
 }
 
 document.getElementById("off").addEventListener("click", function () {
-    showConfirmation("Are you sure you want to shut down?", () => {
-        sendRequest("/shutdown");
-    });
+    showConfirmation(
+        "Whoa there! About to power down? Double-check before pulling the plug.", 
+        () => {
+            sendRequest("/shutdown");
+        }
+    );
 });
 
 document.getElementById("restart").addEventListener("click", function () {
-    showConfirmation("Are you sure you want to restart?", () => {
-        sendRequest("/restart");
-    });
+    showConfirmation(
+        "Time for a fresh start? Restarting will close everything you’ve got open.", 
+        () => {
+            sendRequest("/restart");
+        }
+    );
 });
 
 document.getElementById("logout").addEventListener("click", function () {
-    showConfirmation("Are you sure you want to log out?", () => {
-        sendRequest("/logout");
-    });
+    showConfirmation(
+        "Logging out already? Hope you saved your work!", 
+        () => {
+            sendRequest("/logout");
+        }
+    );
 });
+
 
 function sendRequest(endpoint) {
     fetch(endpoint, {
