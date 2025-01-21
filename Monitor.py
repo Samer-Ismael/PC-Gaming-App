@@ -239,9 +239,6 @@ def update():
 # System Endpoint
 #------------------------------------------------
 
-
-
-
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
     os.system("shutdown /s /t 1") 
@@ -256,9 +253,6 @@ def restart():
 def logout():
     os.system("shutdown /l")
     return jsonify({"message": "User logged out"}), 200
-
-
-
 
 #-------------------------------------------------------------------------------------
 
