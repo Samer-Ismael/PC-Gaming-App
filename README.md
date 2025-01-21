@@ -7,7 +7,7 @@ Get the App using this like so you get the latest updates when i push them [Moni
 # Why
 The idea behind this project is to monitor your system while playing games, allowing you to conveniently check your system metrics by simply opening the page on your mobile phone.
 
-![Example Image](/lib/image.png)
+![Example Image](/lib/Skärmbild%202025-01-page.png)
 
-![Example Image](/lib/Skärmbild%202025-01-20%20150048.png)
+![Example Image](/lib/Skärmbild%202025-01-21%20110139.png)
 
