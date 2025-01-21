@@ -310,3 +310,18 @@ a:hover {
 .no-button:hover {
     background-color: darkred;
 }
+
+
+
+
+
+.card {
+    transition: transform 0.2s ease;
+    cursor: grab;
+}
+
+.card.dragging {
+    opacity: 0.5;
+    transform: scale(1.05);
+    cursor: grabbing;
+}

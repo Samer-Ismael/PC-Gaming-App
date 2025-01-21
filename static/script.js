@@ -274,3 +274,67 @@ function sendRequest(endpoint) {
             alert("An error occurred. Please try again.");
         });
 }
+
+
+
+// Select the container and all draggable cards
+const container = document.getElementById('card-container');
+const cards = document.querySelectorAll('.card');
+
+// Add drag event listeners to each card
+cards.forEach(card => {
+    card.addEventListener('dragstart', dragStart);
+    card.addEventListener('dragend', dragEnd);
+});
+
+// Add dragover and drop event listeners to the container
+container.addEventListener('dragover', dragOver);
+container.addEventListener('drop', drop);
+
+let draggedCard = null;
+
+// When dragging starts
+function dragStart(event) {
+    draggedCard = this; // Save the dragged card
+    setTimeout(() => this.classList.add('dragging'), 0);
+}
+
+// When dragging ends
+function dragEnd() {
+    this.classList.remove('dragging');
+    draggedCard = null;
+}
+
+// When dragging over the container
+function dragOver(event) {
+    event.preventDefault(); // Prevent default to allow drop
+    const afterElement = getDragAfterElement(container, event.clientY);
+    if (afterElement == null) {
+        container.appendChild(draggedCard);
+    } else {
+        container.insertBefore(draggedCard, afterElement);
+    }
+}
+
+// When dropping inside the container
+function drop(event) {
+    event.preventDefault();
+    if (draggedCard) {
+        draggedCard.classList.remove('dragging');
+    }
+}
+
+// Helper function to determine the position to insert the card
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.card:not(.dragging)')];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}

@@ -34,53 +34,56 @@
     </div>
     <p id="update-message" style="display: none; color: green; cursor: pointer;">New version available. Please restart the app.</p>
     <div class="container">
-        <div class="card">
-            <h2><i class="fas fa-microchip"></i> CPU</h2>
-            <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="cpu-usage">Loading...</span>%</p>
-            <p><i class="fas fa-cogs"></i> Current: <span id="cpu-frequency-current">Loading...</span> MHz</p>
-            <p><i class="fas fa-cogs"></i> Max: <span id="cpu-frequency-max">Loading...</span> MHz</p>
-            <p><i class="fas fa-temperature-high"></i> Temperature: <span id="cpu-temperature">Loading...</span>°C</p>
+        <div class="container" id="card-container">
+            <div class="card" draggable="true" id="card-cpu">
+                <h2><i class="fas fa-microchip"></i> CPU</h2>
+                <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="cpu-usage">Loading...</span>%</p>
+                <p><i class="fas fa-cogs"></i> Current: <span id="cpu-frequency-current">Loading...</span> MHz</p>
+                <p><i class="fas fa-cogs"></i> Max: <span id="cpu-frequency-max">Loading...</span> MHz</p>
+                <p><i class="fas fa-temperature-high"></i> Temperature: <span id="cpu-temperature">Loading...</span>°C</p>
+            </div>
+            <div class="card" draggable="true" id="card-ram">
+                <h2><i class="fas fa-memory"></i> RAM</h2>
+                <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="ram-usage">Loading...</span>%</p>
+                <p><i class="fas fa-server"></i> Total: <span id="ram-total">Loading...</span> GB</p>
+                <p><i class="fas fa-server"></i> Free: <span id="ram-free">Loading...</span> GB</p>
+                <button id="clear-cache"><i class="fas fa-trash-alt"></i> Clear Cache</button>
+                <p id="loading-message" class="loading-message" style="display: none;">Please wait, clearing memory...</p>
+            </div>
+            <div class="card" draggable="true" id="card-disk">
+                <h2><i class="fas fa-hdd"></i> Disk</h2>
+                <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="disk-usage">Loading...</span>%</p>
+                <p><i class="fas fa-hdd"></i> Free Space: <span id="disk-free">Loading...</span> GB</p>
+                <p><i class="fas fa-arrow-circle-down"></i> Read: <span id="disk-read">Loading...</span> MB</p>
+                <p><i class="fas fa-arrow-circle-up"></i> Write: <span id="disk-write">Loading...</span> MB</p>
+                <button id="clear-temp-files"><i class="fas fa-trash-alt"></i> Clear Temp Files</button>
+                <p id="disk-loading-message" class="loading-message" style="display: none;">Please wait, clearing temporary files...</p>
+            </div>
+            <div class="card" draggable="true" id="card-gpu">
+                <h2><i class="fas fa-video"></i> GPU</h2>
+                <p><i class="fas fa-cogs"></i> Name: <span id="gpu-name">Loading...</span></p>
+                <p><i class="fas fa-temperature-high"></i> Temperature: <span id="gpu-temperature">Loading...</span>°C</p>
+                <p><i class="fas fa-tachometer-alt"></i> Utilization: <span id="gpu-utilization">Loading...</span>%</p>
+                <p><i class="fas fa-memory"></i> Memory Used: <span id="gpu-memory-used">Loading...</span> MB</p>
+                <p><i class="fas fa-memory"></i> Memory Total: <span id="gpu-memory-total">Loading...</span> MB</p>
+            </div>
+            <div class="card" draggable="true" id="card-network">
+                <h2><i class="fas fa-network-wired"></i> Internet Speed</h2>
+                <p><i class="fas fa-arrow-circle-down"></i> Download: <span id="down-speed">...</span></p>
+                <p><i class="fas fa-arrow-circle-up"></i> Upload: <span id="up-speed">...</span></p>
+                <p><i class="fas fa-tachometer-alt"></i> Ping: <span id="ping">...</span></p>
+                <button id="start-speed-test"><i class="fas fa-play-circle"></i> Start Speed Test</button>
+                <p id="speed-test" class="loading-message" style="display: none;">Please wait, testing the connection...</p>
+            </div>
+            <div class="card" draggable="true" id="card-volume">
+                <h2><i class="fas fa-volume-up"></i> Volume Controls</h2>
+                <button id="increase-volume"><i class="fas fa-volume-plus"></i> + 5%</button>
+                <button id="decrease-volume"><i class="fas fa-volume-minus"></i> - 5%</button>
+                <button id="mute"><i class="fas fa-volume-mute"></i> </button>
+                <button id="unmute"><i class="fas fa-volume-up"></i> </button>
+            </div>
         </div>
-        <div class="card">
-            <h2><i class="fas fa-memory"></i> RAM</h2>
-            <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="ram-usage">Loading...</span>%</p>
-            <p><i class="fas fa-server"></i> Total: <span id="ram-total">Loading...</span> GB</p>
-            <p><i class="fas fa-server"></i> Free: <span id="ram-free">Loading...</span> GB</p>
-            <button id="clear-cache"><i class="fas fa-trash-alt"></i> Clear Cache</button>
-            <p id="loading-message" class="loading-message" style="display: none;">Please wait, clearing memory...</p>
-        </div>
-        <div class="card">
-            <h2><i class="fas fa-hdd"></i> Disk</h2>
-            <p><i class="fas fa-tachometer-alt"></i> Usage: <span id="disk-usage">Loading...</span>%</p>
-            <p><i class="fas fa-hdd"></i> Free Space: <span id="disk-free">Loading...</span> GB</p>
-            <p><i class="fas fa-arrow-circle-down"></i> Read: <span id="disk-read">Loading...</span> MB</p>
-            <p><i class="fas fa-arrow-circle-up"></i> Write: <span id="disk-write">Loading...</span> MB</p>
-            <button id="clear-temp-files"><i class="fas fa-trash-alt"></i> Clear Temp Files</button>
-            <p id="disk-loading-message" class="loading-message" style="display: none;">Please wait, clearing temporary files...</p>
-        </div>
-        <div class="card">
-            <h2><i class="fas fa-video"></i> GPU</h2>
-            <p><i class="fas fa-cogs"></i> Name: <span id="gpu-name">Loading...</span></p>
-            <p><i class="fas fa-temperature-high"></i> Temperature: <span id="gpu-temperature">Loading...</span>°C</p>
-            <p><i class="fas fa-tachometer-alt"></i> Utilization: <span id="gpu-utilization">Loading...</span>%</p>
-            <p><i class="fas fa-memory"></i> Memory Used: <span id="gpu-memory-used">Loading...</span> MB</p>
-            <p><i class="fas fa-memory"></i> Memory Total: <span id="gpu-memory-total">Loading...</span> MB</p>
-        </div>
-        <div class="card">
-            <h2><i class="fas fa-network-wired"></i> Internet Speed</h2>
-            <p><i class="fas fa-arrow-circle-down"></i> Download: <span id="down-speed">...</span></p>
-            <p><i class="fas fa-arrow-circle-up"></i> Upload: <span id="up-speed">...</span></p>
-            <p><i class="fas fa-tachometer-alt"></i> Ping: <span id="ping">...</span></p>
-            <button id="start-speed-test"><i class="fas fa-play-circle"></i> Start Speed Test</button>
-            <p id="speed-test" class="loading-message" style="display: none;">Please wait, testing the connection...</p>
-        </div>
-        <div class="card">
-            <h2><i class="fas fa-volume-up"></i> Volume Controls</h2>
-            <button id="increase-volume"><i class="fas fa-volume-plus"></i> + 5%</button>
-            <button id="decrease-volume"><i class="fas fa-volume-minus"></i> - 5%</button>
-            <button id="mute"><i class="fas fa-volume-mute"></i> </button>
-            <button id="unmute"><i class="fas fa-volume-up"></i> </button>
-        </div>
+        
     </div>
     
     <script src="/static/script.js"></script>
