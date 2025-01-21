@@ -208,3 +208,79 @@ function displayAppVersion() {
 window.onload = function() {
     displayAppVersion();
 };
+
+
+
+
+
+
+function showConfirmation(message, onConfirm) {
+    const modal = document.createElement("div");
+    modal.classList.add("modal-overlay");
+
+    modal.innerHTML = `
+        <div class="modal">
+            <p>${message}</p>
+            <div class="modal-buttons">
+                <button id="confirm-yes" class="yes-button">Yes</button>
+                <button id="confirm-no" class="no-button">No</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById("confirm-yes").addEventListener("click", () => {
+        onConfirm(); 
+        document.body.removeChild(modal);
+    });
+
+    document.getElementById("confirm-no").addEventListener("click", () => {
+        document.body.removeChild(modal);
+    });
+}
+
+document.getElementById("off").addEventListener("click", function () {
+    showConfirmation(
+        "Whoa there! About to power down? Double-check before pulling the plug.", 
+        () => {
+            sendRequest("/shutdown");
+        }
+    );
+});
+
+document.getElementById("restart").addEventListener("click", function () {
+    showConfirmation(
+        "Time for a fresh start? Restarting will close everything you’ve got open.", 
+        () => {
+            sendRequest("/restart");
+        }
+    );
+});
+
+document.getElementById("logout").addEventListener("click", function () {
+    showConfirmation(
+        "Logging out already? Hope you saved your work!", 
+        () => {
+            sendRequest("/logout");
+        }
+    );
+});
+
+
+function sendRequest(endpoint) {
+    fetch(endpoint, {
+        method: "POST",
+    })
+        .then(response => {
+            if (response.ok) {
+                alert("Action successful!");
+            } else {
+                alert("Failed to complete the action. Please try again.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("An error occurred. Please try again.");
+        });
+}

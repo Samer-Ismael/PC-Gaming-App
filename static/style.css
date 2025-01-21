@@ -208,3 +208,105 @@ a:hover {
     margin-top: 5px;
     display: none;
 }
+
+
+
+
+
+
+/* Container for buttons */
+.buttons-container {
+    display: flex;
+    justify-content: flex-start; /* Align buttons to the left */
+    margin-top: 10px; /* Add spacing above the buttons */
+    gap: 15px; /* Space between buttons */
+}
+
+/* Style for buttons */
+.action-button {
+    background-color: #007bff; /* Default button color */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Space between icon and text */
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+/* Individual button colors */
+.action-button.shutdown {
+    background-color: #dc3545; /* Red for shutdown */
+}
+.action-button.restart {
+    background-color: #ffc107; /* Yellow for restart */
+}
+.action-button.logout {
+    background-color: #28a745; /* Green for logout */
+}
+
+/* Hover effects */
+.action-button:hover {
+    opacity: 0.9; /* Slightly fade on hover */
+}
+
+/* Responsive alignment for small screens */
+@media (max-width: 600px) {
+    .buttons-container {
+        flex-direction: column; /* Stack buttons vertically on smaller screens */
+        gap: 10px; /* Adjust spacing */
+    }
+}
+
+/* Modal box styling */
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: fixed; /* Position fixed so it stays in the same place even when scrolling */
+    top: 50%; /* Vertically center it */
+    left: 50%; /* Horizontally center it */
+    transform: translate(-50%, -50%); /* Adjust the element's position back to truly center it */
+    z-index: 9999; /* Ensure the modal is on top of other content */
+    width: 80%; /* Make the modal width 80% of the viewport width (optional) */
+    max-width: 400px; /* Set a maximum width (optional) */
+}
+
+/* Modal buttons container */
+.modal-buttons {
+    margin-top: 20px;
+}
+
+/* Yes and No buttons */
+.yes-button {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.no-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Button hover effects */
+.yes-button:hover {
+    background-color: darkgreen;
+}
+
+.no-button:hover {
+    background-color: darkred;
+}

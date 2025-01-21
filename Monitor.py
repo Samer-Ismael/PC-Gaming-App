@@ -1,3 +1,4 @@
+from ctypes import POINTER
 from flask import Flask, jsonify, render_template, request, send_from_directory
 import socket
 import logging
@@ -50,18 +51,18 @@ def startup_message():
     
     print ("*************************************************************")
 
-    print(r"""
-        /\     /\
-       {  `---'  }
-       {  O   O  }
-       ~~>  V  <~~
-        \  \|/  /
-         `-----'____
-         /     \    \_
-        {       }\  )_\_   _
-        |  \_/  |/ /  \_\_/ )
-         \__/  /(_/     \__/
-           (__/
+    print(r"""           
+                   /\     /\
+                  {  `---'  }
+                  {  O   O  }
+                  ~~>  V  <~~
+                   \  \|/  /
+                    `-----'____
+                    /     \    \_
+                   {  **   }\  )_\_   _
+                   |  \_/  |/ /  \_\_/ )
+                    \__/  /(_/     \__/
+                      (__/
     """)
 
 @app.route("/")
@@ -191,9 +192,9 @@ def unmute():
 def clear_cache():
     try:
         clear_cache_mem() 
-        return jsonify({"message": "Standby memory cleared successfully."}), 200  
+        return jsonify({"status": "success"}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Disk Endpoint
 #------------------------------------------------
@@ -234,6 +235,31 @@ def update():
         return jsonify({'status': 'Updating...'}), 200
     except Exception as e:
         return jsonify({'status': f'Error during update: {e}'}), 500
+
+# System Endpoint
+#------------------------------------------------
+
+
+
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    os.system("shutdown /s /t 1") 
+    return jsonify({"message": "System shutting down"}), 200
+
+@app.route('/restart', methods=['POST'])
+def restart():
+    os.system("shutdown /r /t 1") 
+    return jsonify({"message": "System restarting"}), 200
+
+@app.route('/logout', methods=['POST'])
+def logout():
+    os.system("shutdown /l")
+    return jsonify({"message": "User logged out"}), 200
+
+
+
+
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
