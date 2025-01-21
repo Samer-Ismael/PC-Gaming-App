@@ -210,6 +210,10 @@ window.onload = function() {
 };
 
 
+
+
+
+
 function showConfirmation(message, onConfirm) {
     const modal = document.createElement("div");
     modal.classList.add("modal-overlay");
