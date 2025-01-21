@@ -1,3 +1,4 @@
+from ctypes import POINTER
 from flask import Flask, jsonify, render_template, request, send_from_directory
 import socket
 import logging
@@ -191,9 +192,9 @@ def unmute():
 def clear_cache():
     try:
         clear_cache_mem() 
-        return jsonify({"message": "Standby memory cleared successfully."}), 200  
+        return jsonify({"status": "success"}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 # Disk Endpoint
 #------------------------------------------------
@@ -252,6 +253,61 @@ def restart():
 def logout():
     os.system("shutdown /l")
     return jsonify({"message": "User logged out"}), 200
+
+from flask import Flask, request, jsonify, render_template
+from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume, ISimpleAudioVolume
+from ctypes import cast, POINTER
+
+def list_audio_sessions():
+    sessions = AudioUtilities.GetAllSessions()
+    app_sessions = []
+    for session in sessions:
+        if session.Process:
+            app_sessions.append({
+                'name': session.Process.name(),
+                'volume': session.SimpleAudioVolume.GetMasterVolume()
+            })
+    return app_sessions
+
+# Function to set the global (system-wide) volume
+def set_global_volume(level):
+    devices = AudioUtilities.GetSpeakers()
+    interface = devices.Activate(
+        IAudioEndpointVolume._iid_, 1, None)
+    volume = cast(interface, POINTER(IAudioEndpointVolume))
+    volume.SetMasterVolumeLevelScalar(level, None)
+
+# Function to set volume for a specific application
+def set_app_volume(app_name, level):
+    sessions = AudioUtilities.GetAllSessions()
+    for session in sessions:
+        if session.Process and session.Process.name() == app_name:
+            volume = session.SimpleAudioVolume
+            volume.SetMasterVolume(level, None)
+            return f"Set {app_name} volume to {level * 100}%"
+    return f"App {app_name} not found"
+
+# Endpoint to list audio sessions
+@app.route('/list_audio_sessions', methods=['GET'])
+def list_sessions():
+    app_sessions = list_audio_sessions()
+    return jsonify(app_sessions)
+
+# Endpoint to set volume (either global or app-specific)
+@app.route('/set_volume', methods=['POST'])
+def set_volume():
+    data = request.get_json()
+    app_name = data.get('app_name')
+    level = data.get('level')
+
+    # If app_name is provided, set the app's volume
+    if app_name:
+        response = set_app_volume(app_name, level)
+        return jsonify({'message': response})
+
+    # If no app_name is provided, set the global volume
+    set_global_volume(level)
+    return jsonify({'message': f"Global volume set to {level * 100}%"})
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
