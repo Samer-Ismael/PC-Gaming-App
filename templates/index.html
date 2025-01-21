@@ -13,13 +13,13 @@
     <header>
         <h1>Smokey & Lemoneh</h1>
         <h4>Access this page on your phone: <a href="http://{{ ip_address }}:5000">http://{{ ip_address }}:5000</a></h4>
-        <div class="buttons">
-            <button id="off"><i class="fas fa-power-off"></i></button>
-            <button id="restart"><i class="fas fa-sync-alt"></i></button>
-            <button id="logout"><i class="fas fa-sign-out-alt"></i></button>
-        </div>
     </header>
     <p id="app-version">App Version:</p>
+    <div class="buttons-container">
+        <button id="off" class="action-button shutdown"><i class="fas fa-power-off"></i> </button>
+        <button id="restart" class="action-button restart"><i class="fas fa-sync-alt"></i> </button>
+        <button id="logout" class="action-button logout"><i class="fas fa-sign-out-alt"></i> </button>
+    </div>
     <p id="update-message" style="display: none; color: green; cursor: pointer;">New version available. Please restart the app.</p>
     <div class="container">
         <div class="card">
