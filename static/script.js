@@ -1,23 +1,49 @@
 
 
 function fetchMetrics() {
-    fetch('/metrics')
+    // Fetch CPU metrics
+    fetch('/metrics/cpu')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('cpu-usage').textContent = data.cpu.usage;
-            document.getElementById('cpu-frequency-current').textContent = `${data.cpu["Frequency-curent"]}`;
-            document.getElementById('cpu-frequency-max').textContent = `${data.cpu["Frequency-max"]}`;
-            document.getElementById('cpu-temperature').textContent = data.cpu.temperature;
-            document.getElementById('ram-usage').textContent = data.ram.usage;
-            document.getElementById('ram-total').textContent = data.ram.total;
-            document.getElementById('ram-free').textContent = data.ram.free;
-            document.getElementById('disk-usage').textContent = data.disk.usage;
-            document.getElementById('disk-free').textContent = data.disk.free_space;
-            document.getElementById('gpu-name').textContent = data.gpu.name;
-            document.getElementById('gpu-temperature').textContent = data.gpu.temperature;
-            document.getElementById('gpu-utilization').textContent = data.gpu.utilization;
+            document.getElementById('cpu-usage').textContent = data.usage;
+            document.getElementById('cpu-frequency-current').textContent = `${data["Frequency-curent"]}`;
+            document.getElementById('cpu-frequency-max').textContent = `${data["Frequency-max"]}`;
+            document.getElementById('cpu-temperature').textContent = data.temperature;
         })
-        .catch(error => console.error('Error fetching metrics:', error));
+        .catch(error => console.error('Error fetching CPU metrics:', error));
+
+    // Fetch RAM metrics
+    fetch('/metrics/ram')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('ram-usage').textContent = data.usage;
+            document.getElementById('ram-total').textContent = data.total;
+            document.getElementById('ram-free').textContent = data.free;
+        })
+        .catch(error => console.error('Error fetching RAM metrics:', error));
+
+    // Fetch Disk metrics
+    fetch('/metrics/disk')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('disk-usage').textContent = data.usage;
+            document.getElementById('disk-free').textContent = data.free_space;
+            document.getElementById('disk-read').textContent = data.read_speed;
+            document.getElementById('disk-write').textContent = data.write_speed;
+        })
+        .catch(error => console.error('Error fetching Disk metrics:', error));
+
+    // Fetch GPU metrics
+    fetch('/metrics/gpu')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('gpu-name').textContent = data.name;
+            document.getElementById('gpu-temperature').textContent = data.temperature;
+            document.getElementById('gpu-utilization').textContent = data.utilization;
+            document.getElementById('gpu-memory-used').textContent = data.memory_used;
+            document.getElementById('gpu-memory-total').textContent = data.memory_total;
+        })
+        .catch(error => console.error('Error fetching GPU metrics:', error));
 }
 
 setInterval(fetchMetrics, 1000);  

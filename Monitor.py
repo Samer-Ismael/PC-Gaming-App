@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 import socket
 import logging
 from werkzeug.serving import WSGIRequestHandler
-from gpu import get_gpu_metrics, init_gpu
+from gpu import get_gpu_metrics
 import cpu 
 from ram import get_ram_metrics, clear_cache_mem
 from disk import get_disk_metrics, clear_temp_files
@@ -18,8 +18,6 @@ app = Flask(__name__)
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
-gpu_available = init_gpu()
-print(f"GPU Available: {gpu_available}")
 
 def get_ip_address():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -97,40 +95,57 @@ def speed_test():
 # Metrics Endpoint
 #------------------------------------------------
 
-@app.route("/metrics")
-def metrics():
+@app.route("/metrics/cpu")
+def cpu_metrics():
     try:
         cpu_usage = psutil.cpu_percent(interval=1)
         cpu_freq = psutil.cpu_freq()
         current = cpu_freq.current
         max = cpu_freq.max
-        ram_metrics = get_ram_metrics()
-        disk_metrics = get_disk_metrics()
-        gpu_metrics = get_gpu_metrics()        
         return jsonify({
-            "cpu": {
-                "usage": cpu_usage,
-                "Frequency-curent": current,
-                "Frequency-max": max,
-                "temperature": cpu.get_cpu_temperature_metrics(),
-            },
-            "ram": ram_metrics,
-            "disk": disk_metrics,
-            "gpu": gpu_metrics,
+            "usage": cpu_usage,
+            "Frequency-curent": current,
+            "Frequency-max": max,
+            "temperature": cpu.get_cpu_temperature_metrics(),
         })
     except Exception as e:
-        print(f"Error fetching metrics: {e}")
+        print(f"Error fetching CPU metrics: {e}")
         return jsonify({
-            "cpu": {
-                "usage": "Unavailable", 
-                "temperature": "Unavailable", 
-                "frequency_current": "Unavailable", 
-                "frequency_max": "Unavailable",
-            },            
-            "ram": {"usage": "Unavailable", "total": "Unavailable", "free": "Unavailable"},
-            "disk": {"usage": "Unavailable", "free_space": "Unavailable"},
-            "gpu": {"name": "Unavailable", "temperature": "Unavailable", "utilization": "Unavailable"},
-        })
+            "usage": "Unavailable",
+            "Frequency-curent": "Unavailable",
+            "Frequency-max": "Unavailable",
+            "temperature": "Unavailable",
+        }), 500
+
+
+@app.route("/metrics/ram")
+def ram_metrics():
+    try:
+        ram_metrics = get_ram_metrics()
+        return jsonify(ram_metrics)
+    except Exception as e:
+        print(f"Error fetching RAM metrics: {e}")
+        return jsonify({"usage": "Unavailable", "total": "Unavailable", "free": "Unavailable"}), 500
+
+
+@app.route("/metrics/disk")
+def disk_metrics():
+    try:
+        disk_metrics = get_disk_metrics()
+        return jsonify(disk_metrics)
+    except Exception as e:
+        print(f"Error fetching Disk metrics: {e}")
+        return jsonify({"usage": "Unavailable", "free_space": "Unavailable"}), 500
+
+
+@app.route("/metrics/gpu")
+def gpu_metrics():
+    try:
+        gpu_metrics = get_gpu_metrics()
+        return jsonify(gpu_metrics)
+    except Exception as e:
+        print(f"Error fetching GPU metrics: {e}")
+        return jsonify({"name": "Unavailable", "temperature": "Unavailable", "utilization": "Unavailable", "memory_used": "Unavailable", "memory_total": "Unavailable"}), 500
 
 # Audio Endpoint
 #------------------------------------------------
