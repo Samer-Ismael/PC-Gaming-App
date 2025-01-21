@@ -4,7 +4,6 @@ import clr
 dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'OpenHardwareMonitorLib.dll')
 
 if os.path.exists(dll_path):
-    print("DLL found!")
     clr.AddReference(dll_path)
     from OpenHardwareMonitor import Hardware
     print("Module loaded successfully!")

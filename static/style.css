@@ -208,3 +208,89 @@ a:hover {
     margin-top: 5px;
     display: none;
 }
+
+/* Position buttons in the top-right corner */
+header .buttons {
+    position: absolute;
+    top: 10px; /* Adjust to move the buttons closer to the top */
+    right: 10px; /* Align the buttons to the right */
+}
+
+/* Style individual buttons */
+header button {
+    margin-left: 10px; /* Add space between buttons */
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* Specific styles for the 'Turn Off' button */
+#off {
+    background-color: red;
+    color: white;
+}
+
+/* Hover effect for all buttons */
+header button:hover {
+    opacity: 0.8;
+}
+
+
+/* Modal overlay styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Modal box styling */
+.modal {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Modal buttons container */
+.modal-buttons {
+    margin-top: 20px;
+}
+
+/* Yes and No buttons */
+.yes-button {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.no-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Button hover effects */
+.yes-button:hover {
+    background-color: darkgreen;
+}
+
+.no-button:hover {
+    background-color: darkred;
+}

@@ -7,11 +7,17 @@
     <link rel="stylesheet" href="/static/style.css">
     <!-- Include FontAwesome for icons -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  
 </head>
 <body>
     <header>
         <h1>Smokey & Lemoneh</h1>
         <h4>Access this page on your phone: <a href="http://{{ ip_address }}:5000">http://{{ ip_address }}:5000</a></h4>
+        <div class="buttons">
+            <button id="off"><i class="fas fa-power-off"></i></button>
+            <button id="restart"><i class="fas fa-sync-alt"></i></button>
+            <button id="logout"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
     </header>
     <p id="app-version">App Version:</p>
     <p id="update-message" style="display: none; color: green; cursor: pointer;">New version available. Please restart the app.</p>
