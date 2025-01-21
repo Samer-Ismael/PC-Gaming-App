@@ -5,7 +5,7 @@ import requests
 
 
 
-APP_VERSION = "1.4.9"
+APP_VERSION = "1.4.10"
 
 def get_latest_tag_name():
     """
