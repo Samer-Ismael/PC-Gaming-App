@@ -247,6 +247,9 @@ a:hover {
 .action-button.logout {
     background-color: #28a745; /* Green for logout */
 }
+.action-button.lock {
+    background-color: #007bff; /* Blue for lock */
+}
 
 /* Hover effects */
 .action-button:hover {

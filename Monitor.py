@@ -254,6 +254,11 @@ def logout():
     os.system("shutdown /l")
     return jsonify({"message": "User logged out"}), 200
 
+@app.route('/lock', methods=['POST'])
+def lock():
+    os.system("rundll32.exe user32.dll,LockWorkStation")
+    return jsonify({"message": "System locked"}), 200
+
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":

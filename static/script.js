@@ -267,6 +267,14 @@ document.getElementById("logout").addEventListener("click", function () {
     );
 });
 
+document.getElementById("Lock").addEventListener("click", function () {
+    showConfirmation(
+        "this will Lock your computer!", 
+        () => {
+            sendRequest("/lock");
+        }
+    );
+});
 
 function sendRequest(endpoint) {
     fetch(endpoint, {
