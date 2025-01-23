@@ -48,35 +48,6 @@ function fetchMetrics() {
 
 setInterval(fetchMetrics, 1000);  
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('increase-volume').addEventListener('click', () => {
-        fetch('/volume/increase', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => console.log(data.message))
-            .catch(error => console.error('Error:', error));
-    });
-
-    document.getElementById('decrease-volume').addEventListener('click', () => {
-        fetch('/volume/decrease', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => console.log(data.message))
-            .catch(error => console.error('Error:', error));
-    });
-
-    document.getElementById('mute').addEventListener('click', () => {
-        fetch('/volume/mute', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => console.log(data.message))
-            .catch(error => console.error('Error:', error));
-    });
-
-    document.getElementById('unmute').addEventListener('click', () => {
-        fetch('/volume/unmute', { method: 'POST' })
-            .then(response => response.json())
-            .then(data => console.log(data.message))
-            .catch(error => console.error('Error:', error));
-    });
-});
 
 document.getElementById("clear-cache").addEventListener("click", () => {
     const loadingMessage = document.getElementById("loading-message");
@@ -211,9 +182,6 @@ window.onload = function() {
 
 
 
-
-
-
 function showConfirmation(message, onConfirm) {
     const modal = document.createElement("div");
     modal.classList.add("modal-overlay");
@@ -292,3 +260,73 @@ function sendRequest(endpoint) {
             alert("An error occurred. Please try again.");
         });
 }
+
+
+// Endpoint URL
+const endpoint = '/get_audio_sessions';
+
+// Function to fetch data and render controls
+async function updateVolumeControls() {
+    try {
+        const response = await fetch(endpoint);
+        const data = await response.json();
+
+        // Get the container for volume controls
+        const container = document.getElementById('volume-controls-container');
+        container.innerHTML = ''; // Clear existing controls
+
+        // Loop through the data to create controls
+        data.sessions.forEach(session => {
+            const controlDiv = document.createElement('div');
+            controlDiv.classList.add('volume-buttons');
+
+            // Add the app icon
+            const icon = document.createElement('i');
+            icon.className = `${session.icon} pc-icon`; // Use session-specific icon
+            controlDiv.appendChild(icon);
+
+            // Add buttons
+            ['increase', 'decrease', 'mute', 'unmute'].forEach(action => {
+                const button = document.createElement('button');
+                button.dataset.appName = session.name; // App name
+                button.dataset.action = action; // Action type
+                button.innerHTML = `<i class="fas ${
+                    action === 'increase' ? 'fa-plus' :
+                    action === 'decrease' ? 'fa-minus' :
+                    action === 'mute' ? 'fa-volume-mute' :
+                    'fa-volume-up'
+                }"></i>`;
+                button.addEventListener('click', () => handleVolumeAction(session.name, action));
+                controlDiv.appendChild(button);
+            });
+
+            // Append the controls to the container
+            container.appendChild(controlDiv);
+        });
+    } catch (error) {
+        console.error('Error fetching audio sessions:', error);
+    }
+}
+
+// Function to handle button clicks
+async function handleVolumeAction(appName, action) {
+    const endpoint = '/set_volume'; // Replace with your backend endpoint
+    const level = action === 'increase' ? 1.0 : action === 'decrease' ? -0.1 : action === 'mute' ? 0 : 0.5;
+
+    try {
+        await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                app_name: appName,
+                level: level,
+            }),
+        });
+        console.log(`${action} action sent for ${appName}`);
+    } catch (error) {
+        console.error('Error sending volume action:', error);
+    }
+}
+
+// Call the function to initialize the controls
+setInterval(updateVolumeControls, 1000);

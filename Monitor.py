@@ -151,39 +151,65 @@ def gpu_metrics():
 # Audio Endpoint
 #------------------------------------------------
 
-@app.route('/volume/increase', methods=['POST'])
-def increase_volume():
-    try:
-        media.press_volume_key(0xAF, 2)  # VK_VOLUME_UP
-        return jsonify({"message": "Volume increased successfully"}), 200
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
+from pycaw.pycaw import AudioUtilities  # Ensure this is included
+from icon import icon_mapping
 
-@app.route('/volume/decrease', methods=['POST'])
-def decrease_volume():
-    try:
-        media.press_volume_key(0xAE, 2)  # VK_VOLUME_DOWN
-        return jsonify({"message": "Volume decreased successfully"}), 200
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
+def get_audio_sessions():
+    """Retrieve all active audio sessions."""
+    sessions = AudioUtilities.GetAllSessions()
+    session_list = []
+    for session in sessions:
+        if session.Process:
+            # Add session details (name and dummy icon for simplicity)
+            session_list.append({
+                "name": session.Process.name(),
+                "icon": "fas fa-desktop" if session.Process.name() == "System Sounds" else "fab fa-chrome" if "chrome" in session.Process.name().lower() else "fab fa-discord"
+            })
+    return session_list
 
-@app.route('/volume/mute', methods=['POST'])
-def mute():
-    try:
-        endpoint = media.get_audio_endpoint()
-        endpoint.SetMute(1, None)  # 1 = Mute
-        return jsonify({"message": "Volume muted successfully"}), 200
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
+def set_volume(app_name, level):
+    """Set the volume level for a specific app."""
+    sessions = AudioUtilities.GetAllSessions()
+    for session in sessions:
+        if session.Process and session.Process.name() == app_name:
+            volume = session.SimpleAudioVolume
+            if level == 0:  # Mute
+                volume.SetMasterVolume(0, None)
+            elif level > 0:  # Increase
+                current_volume = volume.GetMasterVolume()
+                volume.SetMasterVolume(min(current_volume + level, 1.0), None)
+            elif level < 0:  # Decrease
+                current_volume = volume.GetMasterVolume()
+                volume.SetMasterVolume(max(current_volume + level, 0), None)
+            return True
+    return False
 
-@app.route('/volume/unmute', methods=['POST'])
-def unmute():
-    try:
-        endpoint = media.get_audio_endpoint()
-        endpoint.SetMute(0, None)  # 0 = Unmute
-        return jsonify({"message": "Volume unmuted successfully"}), 200
-    except Exception as e:
-        return jsonify({"message": f"Error: {str(e)}"}), 500
+@app.route('/get_audio_sessions', methods=['GET'])
+def get_sessions():
+    """Endpoint to fetch all audio sessions."""
+    sessions = get_audio_sessions()
+    
+    for session in sessions:
+        app_name = session['name']
+        session['icon'] = icon_mapping.get(app_name.lower(), "fas fa-question-circle")
+        
+    return jsonify({"sessions": sessions})
+
+@app.route('/set_volume', methods=['POST'])
+def handle_volume():
+    """Endpoint to handle volume actions."""
+    data = request.json
+    app_name = data.get("app_name")
+    level = data.get("level")
+
+    if not app_name or level is None:
+        return jsonify({"error": "Invalid data"}), 400
+
+    success = set_volume(app_name, level)
+    if success:
+        return jsonify({"message": f"Volume updated for {app_name}"}), 200
+    else:
+        return jsonify({"error": f"App {app_name} not found"}), 404
 
 # RAM Endpoint
 #------------------------------------------------

@@ -313,3 +313,54 @@ a:hover {
 .no-button:hover {
     background-color: darkred;
 }
+
+
+
+.volume-controls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between different app controls */
+}
+
+.volume-buttons {
+    display: flex;
+    align-items: left;
+    gap: 10px; /* Space between icon and buttons */
+}
+
+.pc-icon {
+    font-size: 1.8rem;
+    margin-right: 10px;
+    color: #162633;
+}
+
+.volume-buttons button {
+    width: 35px; /* Fixed width for all buttons */
+    height: 30px; /* Fixed height for all buttons */
+    display: inline-flex; /* Align content inside the button */
+    align-items: center; /* Center icon vertically */
+    justify-content: center; /* Center icon horizontally */
+    border: 1px solid #ccc; /* Subtle border for definition */
+    border-radius: 8px; /* Rounded corners */
+    background-color: #f9f9f9; /* Neutral background */
+    color: #333; /* Icon color */
+    font-size: 18px; /* Icon size */
+    margin: 0 5px; /* Space between buttons */
+    transition: all 0.3s ease; /* Smooth hover effect */
+}
+
+.volume-buttons button:hover {
+    background-color: #e0e0e0; /* Slightly darker background on hover */
+    border-color: #999; /* Change border color on hover */
+    color: #000; /* Darken icon color on hover */
+}
+
+.volume-buttons button:active {
+    background-color: #d0d0d0; /* Even darker on click */
+    transform: scale(0.95); /* Subtle click effect */
+}
+
+.volume-buttons i {
+    pointer-events: none; /* Prevent click events on the icon */
+}
+
