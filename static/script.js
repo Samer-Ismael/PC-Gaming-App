@@ -330,3 +330,10 @@ async function handleVolumeAction(appName, action) {
 
 // Call the function to initialize the controls
 setInterval(updateVolumeControls, 1000);
+
+function sendCommand(command) {
+    fetch(`/media/${command}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+}

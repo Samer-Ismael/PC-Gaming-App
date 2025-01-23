@@ -291,6 +291,23 @@ def lock():
     os.system("rundll32.exe user32.dll,LockWorkStation")
     return jsonify({"message": "System locked"}), 200
 
+# Media Endpoint
+#------------------------------------------------
+
+@app.route('/media/<command>', methods=['POST'])
+def execute_command(command):
+
+    if command == 'prev_track':
+        media.send_media_key("prev_track")
+    elif command == 'play_pause':
+        media.send_media_key("play_pause")
+    elif command == 'next_track':
+        media.send_media_key("next_track")
+    else:
+        return jsonify({"error": "Invalid command"}), 400
+    
+    return jsonify({"message": f"Command '{command}' executed successfully!"})
+
 #-------------------------------------------------------------------------------------
 
 if __name__ == "__main__":

@@ -93,6 +93,7 @@ a:hover {
     line-height: 1.6;
 }
 
+/* Buttons styling */
 .card button {
     background-color: var(--primary-color);
     color: #ffffff;
@@ -101,8 +102,9 @@ a:hover {
     padding: 12px 20px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 10px 5px; /* Spacing between buttons */
 }
 
 .card button:hover {
@@ -120,6 +122,41 @@ a:hover {
     color: var(--loading-color);
     margin-top: 10px;
 }
+
+
+.media-buttons-container {
+    display: flex; /* Enable Flexbox to arrange buttons horizontally */
+    justify-content: center; /* Center buttons horizontally */
+    gap: 15px; /* Space between buttons */
+}
+
+.media-buttons-container button {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    width: 120px; /* Set the width */
+    height: 50px; /* Set the height */
+    font-size: 1.2rem; /* Adjust icon size */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex; /* Ensures icons are centered within the button */
+    justify-content: center; /* Horizontally center the content inside the button */
+    align-items: center; /* Vertically center the content inside the button */
+    gap: 5px; /* Space between icons inside the button */
+}
+
+.media-buttons-container button:hover {
+    background-color: var(--highlight-color);
+    transform: scale(1.05);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.media-buttons-container button:active {
+    transform: scale(0.98);
+}
+
 
 /* Tooltip Styles */
 .tooltip {
