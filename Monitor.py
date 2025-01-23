@@ -31,6 +31,12 @@ def get_ip_address():
         s.close()
     return ip_address
 
+LIB_FOLDER = os.path.join(app.root_path, 'lib')
+
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(LIB_FOLDER, 'cpu.png')
+
 #-------------------------------------------------------------------------------------
 @app.after_request
 def log_bad_requests(response):
