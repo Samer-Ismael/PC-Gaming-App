@@ -277,49 +277,88 @@
         <!-- Remote Control Section -->
         <div class="card" style="grid-column: 1 / -1;">
             <h2><i class="fas fa-mobile-alt"></i> Remote Control</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
-                
-                <!-- Screenshot -->
-                <div class="remote-control-item">
-                    <h3><i class="fas fa-camera"></i> Screenshot</h3>
-                    <button id="take-screenshot" class="remote-button">
-                        <i class="fas fa-camera"></i> Capture Screen
-                    </button>
-                    <div id="screenshot-container" style="margin-top: 1rem; display: none;">
-                        <img id="screenshot-image" style="max-width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1);" alt="Screenshot">
-                        <button id="download-screenshot" class="remote-button" style="margin-top: 0.5rem; width: 100%;">
-                            <i class="fas fa-download"></i> Download
+            
+                <!-- Remote Desktop -->
+                <div class="remote-control-item" style="grid-column: 1 / -1;">
+                    <h3><i class="fas fa-desktop"></i> Remote Desktop</h3>
+                    <div style="margin-bottom: 10px;">
+                        <button id="start-remote-desktop" class="remote-button" style="width: 100%; margin-bottom: 5px;">
+                            <i class="fas fa-play"></i> Start Remote Desktop
+                        </button>
+                        <button id="stop-remote-desktop" class="remote-button" style="width: 100%; background: rgba(220,53,69,0.8); display: none;">
+                            <i class="fas fa-stop"></i> Stop Remote Desktop
                         </button>
                     </div>
-                </div>
-
-                <!-- Clipboard Manager -->
-                <div class="remote-control-item">
-                    <h3><i class="fas fa-clipboard"></i> Clipboard</h3>
-                    <div id="clipboard-content" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; min-height: 60px; max-height: 150px; overflow-y: auto; word-wrap: break-word; font-size: 0.9rem;">
-                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    <div id="remote-desktop-container" style="display: none;">
+                        <div id="remote-desktop-viewer" style="position: relative; background: #000; border-radius: 8px; overflow: hidden; max-width: 100%; margin-bottom: 15px;">
+                            <canvas id="remote-desktop-canvas" style="width: 100%; height: auto; display: block; cursor: crosshair;"></canvas>
+                            <div id="remote-desktop-status" style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">
+                                <i class="fas fa-circle" style="color: #ff4444;"></i> Connecting...
+                            </div>
+                        </div>
+                        
+                        <!-- Modern Touchpad Controller -->
+                        <div class="touchpad-controller">
+                            <div class="touchpad-header">
+                                <div class="cursor-info">
+                                    <i class="fas fa-mouse-pointer"></i>
+                                    <span>Cursor: <span id="remote-cursor-position">0, 0</span></span>
+                                </div>
+                                <div class="touchpad-mode">
+                                    <span id="touchpad-mode-indicator">Move</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Main Touchpad -->
+                            <div id="touchpad-area" class="touchpad-area">
+                                <div id="touchpad-indicator" class="touchpad-indicator"></div>
+                                <div class="touchpad-center-dot"></div>
+                            </div>
+                            
+                            <!-- Control Zones -->
+                            <div class="touchpad-controls">
+                                <!-- Left Side - Click Zones -->
+                                <div class="touchpad-side-controls">
+                                    <div id="touchpad-left-click" class="touchpad-click-zone left-click" title="Left Click">
+                                        <i class="fas fa-hand-pointer"></i>
+                                        <span>Left</span>
+                                    </div>
+                                    <div id="touchpad-right-click" class="touchpad-click-zone right-click" title="Right Click">
+                                        <i class="fas fa-hand-pointer"></i>
+                                        <span>Right</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Center - Mode Toggle -->
+                                <div class="touchpad-center-controls">
+                                    <div id="touchpad-mode-toggle" class="touchpad-mode-button" title="Toggle Mode">
+                                        <i class="fas fa-exchange-alt"></i>
+                                        <span id="mode-text">Move</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Right Side - Scroll Zones -->
+                                <div class="touchpad-side-controls">
+                                    <div id="touchpad-scroll-up" class="touchpad-scroll-zone scroll-up" title="Scroll Up">
+                                        <i class="fas fa-chevron-up"></i>
+                                        <span>Up</span>
+                                    </div>
+                                    <div id="touchpad-scroll-down" class="touchpad-scroll-zone scroll-down" title="Scroll Down">
+                                        <i class="fas fa-chevron-down"></i>
+                                        <span>Down</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Keyboard Input -->
+                            <div class="touchpad-keyboard">
+                                <input type="text" id="remote-keyboard-input" class="touchpad-keyboard-input" placeholder="Type text or key name...">
+                                <button id="remote-send-key" class="touchpad-send-button">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <textarea id="clipboard-input" placeholder="Type text to set clipboard..." style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-primary); font-family: inherit; resize: vertical; min-height: 60px; margin-bottom: 10px;"></textarea>
-                    <button id="set-clipboard" class="remote-button" style="width: 100%;">
-                        <i class="fas fa-copy"></i> Set Clipboard
-                    </button>
-                    <button id="refresh-clipboard" class="remote-button" style="width: 100%; margin-top: 5px; background: rgba(255,255,255,0.1);">
-                        <i class="fas fa-sync"></i> Refresh
-                    </button>
-                </div>
-
-                <!-- App Launcher -->
-                <div class="remote-control-item">
-                    <h3><i class="fas fa-rocket"></i> Launch Apps</h3>
-                    <div id="common-apps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px;">
-                        <p style="text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
-                            <i class="fas fa-spinner fa-spin"></i> Loading apps...
-                        </p>
-                    </div>
-                    <input type="text" id="custom-app-input" placeholder="Type app name or path..." style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-primary); font-family: inherit; margin-bottom: 10px;">
-                    <button id="launch-custom-app" class="remote-button" style="width: 100%;">
-                        <i class="fas fa-play"></i> Launch
-                    </button>
                 </div>
 
                 <!-- File Explorer -->

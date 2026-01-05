@@ -732,166 +732,6 @@ const networkMonitor = {
 // Make processManager globally available
 window.processManager = processManager;
 
-// Screenshot Manager
-const screenshot = {
-    async capture() {
-        try {
-            const container = document.getElementById('screenshot-container');
-            
-            if (!container) {
-                console.error('Screenshot container not found');
-                alert('Screenshot container not found');
-                return;
-            }
-            
-            container.style.display = 'block';
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;"><i class="fas fa-spinner fa-spin"></i> Capturing screenshot...</p>';
-            
-            const data = await api.fetchMetrics('/screenshot');
-            
-            if (data && data.image) {
-                // Create image element
-                const img = document.createElement('img');
-                img.id = 'screenshot-image';
-                img.src = 'data:image/png;base64,' + data.image;
-                img.style.maxWidth = '100%';
-                img.style.borderRadius = '8px';
-                img.style.border = '2px solid rgba(255,255,255,0.1)';
-                img.alt = 'Screenshot';
-                
-                // Create download button
-                const downloadBtn = document.createElement('button');
-                downloadBtn.id = 'download-screenshot';
-                downloadBtn.className = 'remote-button';
-                downloadBtn.style.marginTop = '0.5rem';
-                downloadBtn.style.width = '100%';
-                downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
-                downloadBtn.addEventListener('click', () => screenshot.download());
-                
-                // Update container
-                container.innerHTML = '';
-                container.appendChild(img);
-                container.appendChild(downloadBtn);
-            } else if (data && !data.available) {
-                container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">${data.error || 'Screenshot feature not available'}</p>`;
-            } else if (data && data.error) {
-                container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">Error: ${data.error}</p>`;
-            } else {
-                container.innerHTML = '<p style="text-align: center; color: var(--text-muted); padding: 20px;">Failed to capture screenshot. Please try again.</p>';
-            }
-        } catch (error) {
-            const container = document.getElementById('screenshot-container');
-            if (container) {
-                container.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 20px;">Error: ${error.message || 'Failed to capture screenshot'}</p>`;
-            }
-            console.error('Screenshot error:', error);
-        }
-    },
-    
-    download() {
-        const img = document.getElementById('screenshot-image');
-        if (!img || !img.src) {
-            alert('No screenshot available to download. Please capture a screenshot first.');
-            return;
-        }
-        
-        try {
-            const link = document.createElement('a');
-            link.href = img.src;
-            link.download = `screenshot-${Date.now()}.png`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (error) {
-            console.error('Download error:', error);
-            alert('Failed to download screenshot. You can right-click the image and save it manually.');
-        }
-    }
-};
-
-// Clipboard Manager
-const clipboard = {
-    async load() {
-        try {
-            const data = await api.fetchMetrics('/clipboard');
-            if (data && data.content !== undefined) {
-                document.getElementById('clipboard-content').textContent = data.content || '(empty)';
-            }
-        } catch (error) {
-            console.error('Error loading clipboard:', error);
-            document.getElementById('clipboard-content').textContent = 'Error loading clipboard';
-        }
-    },
-    
-    async set() {
-        const text = document.getElementById('clipboard-input').value;
-        try {
-            const response = await fetch('/clipboard', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ text })
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                alert('Clipboard updated!');
-                this.load();
-                document.getElementById('clipboard-input').value = '';
-            } else {
-                alert('Failed to set clipboard');
-            }
-        } catch (error) {
-            alert('Error setting clipboard');
-            console.error('Set clipboard error:', error);
-        }
-    }
-};
-
-// App Launcher
-const appLauncher = {
-    async loadCommonApps() {
-        try {
-            const data = await api.fetchMetrics('/apps/common');
-            if (data && data.apps) {
-                const container = document.getElementById('common-apps');
-                container.innerHTML = data.apps.map(app => `
-                    <button onclick="appLauncher.launch('${app.path.replace(/'/g, "\\'")}')" 
-                            class="remote-button" style="font-size: 0.85rem; padding: 8px;">
-                        <i class="fas fa-play"></i> ${app.name}
-                    </button>
-                `).join('');
-            }
-        } catch (error) {
-            console.error('Error loading apps:', error);
-        }
-    },
-    
-    async launch(appPath) {
-        try {
-            const response = await fetch('/apps/launch', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ app: appPath })
-            });
-            const data = await response.json();
-            if (data.status === 'success') {
-                alert(data.message);
-            } else {
-                alert(data.message || 'Failed to launch app');
-            }
-    } catch (error) {
-            alert('Error launching app');
-            console.error('Launch app error:', error);
-        }
-    },
-    
-    launchCustom() {
-        const appPath = document.getElementById('custom-app-input').value;
-        if (appPath) {
-            this.launch(appPath);
-            document.getElementById('custom-app-input').value = '';
-        }
-    }
-};
 
 // File Explorer
 const fileExplorer = {
@@ -1011,11 +851,662 @@ const fileExplorer = {
     }
 };
 
+// Remote Desktop
+const remoteDesktop = {
+    isActive: false,
+    streamInterval: null,
+    screenSize: { width: 1920, height: 1080 },
+    canvas: null,
+    ctx: null,
+    scale: 1,
+    offsetX: 0,
+    offsetY: 0,
+    
+    async start() {
+        if (this.isActive) return;
+        
+        try {
+            // Get screen size
+            const sizeData = await api.fetchMetrics('/remote/screen_size');
+            if (sizeData) {
+                this.screenSize = { width: sizeData.width, height: sizeData.height };
+            }
+            
+            // Setup canvas
+            this.canvas = document.getElementById('remote-desktop-canvas');
+            if (!this.canvas) {
+                alert('Canvas element not found');
+                return;
+            }
+            
+            this.ctx = this.canvas.getContext('2d');
+            this.updateCanvasSize();
+            
+            // Initialize mouse position to center
+            this.currentMousePos = {
+                x: this.screenSize.width / 2,
+                y: this.screenSize.height / 2
+            };
+            
+            // Show container
+            document.getElementById('remote-desktop-container').style.display = 'block';
+            document.getElementById('start-remote-desktop').style.display = 'none';
+            document.getElementById('stop-remote-desktop').style.display = 'block';
+            
+            this.isActive = true;
+            this.updateStatus('Connected', '#4CAF50');
+            
+            // Start streaming
+            this.streamInterval = setInterval(() => this.updateFrame(), 100); // 10 FPS
+            
+            // Start cursor position update
+            this.cursorUpdateInterval = setInterval(() => this.updateCursorPosition(), 100);
+            
+            // Setup event listeners (includes touchpad setup)
+            this.setupEventListeners();
+            
+            // Draw cursor indicator
+            this.drawCursorIndicator();
+            
+            // Initialize touchpad mode
+            this.touchpadMode = 'move';
+            const modeIndicator = document.getElementById('touchpad-mode-indicator');
+            const modeText = document.getElementById('mode-text');
+            if (modeIndicator) modeIndicator.textContent = 'Move';
+            if (modeText) modeText.textContent = 'Move';
+        } catch (error) {
+            console.error('Error starting remote desktop:', error);
+            alert('Failed to start remote desktop');
+        }
+    },
+    
+    stop() {
+        if (!this.isActive) return;
+        
+        this.isActive = false;
+        if (this.streamInterval) {
+            clearInterval(this.streamInterval);
+            this.streamInterval = null;
+        }
+        if (this.cursorUpdateInterval) {
+            clearInterval(this.cursorUpdateInterval);
+            this.cursorUpdateInterval = null;
+        }
+        if (this.touchpadInterval) {
+            clearInterval(this.touchpadInterval);
+            this.touchpadInterval = null;
+        }
+        
+        this.touchpadActive = false;
+        this.touchpadVelocity = { x: 0, y: 0 };
+        
+        document.getElementById('remote-desktop-container').style.display = 'none';
+        document.getElementById('start-remote-desktop').style.display = 'block';
+        document.getElementById('stop-remote-desktop').style.display = 'none';
+        
+        this.updateStatus('Disconnected', '#ff4444');
+    },
+    
+    async updateFrame() {
+        if (!this.isActive) return;
+        
+        try {
+            const data = await api.fetchMetrics('/remote/frame');
+            if (data && data.image) {
+                const img = new Image();
+                img.onload = () => {
+                    if (this.ctx && this.canvas) {
+                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        this.ctx.drawImage(img, 0, 0, this.canvas.width, this.canvas.height);
+                        // Redraw cursor indicator after frame
+                        this.drawCursorIndicator();
+                    }
+                };
+                img.src = 'data:image/png;base64,' + data.image;
+            }
+        } catch (error) {
+            console.error('Error updating frame:', error);
+            this.updateStatus('Error', '#ff4444');
+        }
+    },
+    
+    updateCanvasSize() {
+        if (!this.canvas) return;
+        
+        const container = document.getElementById('remote-desktop-viewer');
+        const maxWidth = container ? container.clientWidth : 800;
+        const maxHeight = window.innerHeight * 0.6;
+        
+        const aspectRatio = this.screenSize.width / this.screenSize.height;
+        let width = maxWidth;
+        let height = width / aspectRatio;
+        
+        if (height > maxHeight) {
+            height = maxHeight;
+            width = height * aspectRatio;
+        }
+        
+        this.canvas.width = width;
+        this.canvas.height = height;
+        // Scale factor: how much smaller the canvas is compared to the screen
+        this.scale = width / this.screenSize.width;
+        // Scale factors for converting canvas coords to screen coords
+        this.scaleX = this.screenSize.width / width;
+        this.scaleY = this.screenSize.height / height;
+    },
+    
+    setupEventListeners() {
+        if (!this.canvas) return;
+        
+        // Mouse move
+        let isMouseDown = false;
+        let lastX = 0, lastY = 0;
+        
+        this.canvas.addEventListener('mousedown', (e) => {
+            isMouseDown = true;
+            const coords = this.getCanvasCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+            this.currentMousePos = { x: coords.x, y: coords.y };
+            // Move to absolute position
+            this.moveMouse(coords.x, coords.y, false);
+            // Update visual indicator
+            this.drawCursorIndicator();
+            this.updateCursorPosition();
+        });
+        
+        this.canvas.addEventListener('mousemove', (e) => {
+            const coords = this.getCanvasCoordinates(e);
+            if (isMouseDown) {
+                const dx = coords.x - lastX;
+                const dy = coords.y - lastY;
+                this.moveMouse(dx, dy, true);
+                lastX = coords.x;
+                lastY = coords.y;
+            } else {
+                // Just update visual position without moving actual mouse
+                this.currentMousePos = { x: coords.x, y: coords.y };
+                this.drawCursorIndicator();
+                this.updateCursorPosition();
+            }
+        });
+        
+        this.canvas.addEventListener('mouseup', (e) => {
+            if (isMouseDown) {
+                isMouseDown = false;
+                const coords = this.getCanvasCoordinates(e);
+                // Move to position first, then click at current position
+                this.moveMouse(coords.x, coords.y, false).then(() => {
+                    // Small delay to ensure mouse is at position before clicking
+                    setTimeout(() => {
+                        this.clickMouse('left');
+                    }, 50);
+                });
+            }
+        });
+        
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const coords = this.getCanvasCoordinates(e);
+            // Move to position first, then click at current position
+            this.moveMouse(coords.x, coords.y, false).then(() => {
+                // Small delay to ensure mouse is at position before clicking
+                setTimeout(() => {
+                    this.clickMouse('right');
+                }, 50);
+            });
+        });
+        
+        // Touch events for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const coords = this.getTouchCoordinates(touch);
+            lastX = coords.x;
+            lastY = coords.y;
+            this.currentMousePos = { x: coords.x, y: coords.y };
+            this.moveMouse(coords.x, coords.y, false);
+            this.drawCursorIndicator();
+            this.updateCursorPosition();
+        });
+        
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const coords = this.getTouchCoordinates(touch);
+            const dx = coords.x - lastX;
+            const dy = coords.y - lastY;
+            this.moveMouse(dx, dy, true);
+            lastX = coords.x;
+            lastY = coords.y;
+            this.currentMousePos = { x: coords.x, y: coords.y };
+            this.drawCursorIndicator();
+            this.updateCursorPosition();
+        });
+        
+        this.canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (e.changedTouches.length > 0) {
+                const touch = e.changedTouches[0];
+                const coords = this.getTouchCoordinates(touch);
+                // Move to position first, then click
+                this.moveMouse(coords.x, coords.y, false).then(() => {
+                    // Small delay to ensure mouse is at position before clicking
+                    setTimeout(() => {
+                        this.clickMouse('left');
+                    }, 50);
+                });
+            }
+        });
+        
+        // Setup touchpad controller
+        this.setupTouchpadController();
+    },
+    
+    touchpadMode: 'move', // 'move' or 'scroll'
+    touchpadActive: false,
+    touchpadInterval: null,
+    touchpadVelocity: { x: 0, y: 0 },
+    
+    setupTouchpadController() {
+        const touchpad = document.getElementById('touchpad-area');
+        if (!touchpad) return;
+        
+        const indicator = document.getElementById('touchpad-indicator');
+        let isTouching = false;
+        let touchStartX = 0, touchStartY = 0;
+        let lastMoveX = 0, lastMoveY = 0;
+        
+        // Touch/Mouse start
+        const handleStart = (x, y) => {
+            isTouching = true;
+            const rect = touchpad.getBoundingClientRect();
+            touchStartX = x - rect.left;
+            touchStartY = y - rect.top;
+            lastMoveX = touchStartX;
+            lastMoveY = touchStartY;
+            
+            // Store starting position for relative movement
+            this.touchpadStartPos = { x: touchStartX, y: touchStartY };
+            
+            // Show indicator
+            if (indicator) {
+                indicator.style.left = touchStartX + 'px';
+                indicator.style.top = touchStartY + 'px';
+                indicator.classList.add('active');
+            }
+            
+            // Start continuous movement
+            this.touchpadActive = true;
+            this.touchpadVelocity = { x: 0, y: 0 };
+            
+            // Clear any existing interval
+            if (this.touchpadInterval) {
+                clearInterval(this.touchpadInterval);
+            }
+            
+            // Start movement/scroll loop (60fps)
+            this.touchpadInterval = setInterval(() => {
+                if (this.touchpadActive && this.touchpadVelocity) {
+                    if (this.touchpadMode === 'move') {
+                        // Move mouse with smoother, more controlled movement
+                        const speed = 0.9; // Reduced speed for better precision
+                        const dx = this.touchpadVelocity.x * speed;
+                        const dy = this.touchpadVelocity.y * speed;
+                        // Only move if movement is significant enough (reduces jitter)
+                        if (Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15) {
+                            this.moveMouse(dx, dy, true);
+                        }
+                    } else if (this.touchpadMode === 'scroll') {
+                        // Scroll based on vertical movement
+                        const scrollSpeed = 0.5; // Reduced scroll speed for better control
+                        const scrollAmount = this.touchpadVelocity.y * scrollSpeed;
+                        if (Math.abs(scrollAmount) > 0.3) {
+                            this.scrollMouse(-scrollAmount);
+                        }
+                    }
+                }
+            }, 16); // ~60fps movement
+        };
+        
+        // Touch/Mouse move - Improved trackpad-style relative movement
+        const handleMove = (x, y) => {
+            if (!isTouching) return;
+            
+            const rect = touchpad.getBoundingClientRect();
+            const currentX = x - rect.left;
+            const currentY = y - rect.top;
+            
+            // Update indicator position
+            if (indicator) {
+                indicator.style.left = currentX + 'px';
+                indicator.style.top = currentY + 'px';
+            }
+            
+            // Calculate relative movement from last position (trackpad style)
+            const deltaX = currentX - lastMoveX;
+            const deltaY = currentY - lastMoveY;
+            
+            // Update last position
+            lastMoveX = currentX;
+            lastMoveY = currentY;
+            
+            // Calculate distance from center for dead zone
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const distanceFromCenter = Math.sqrt(
+                Math.pow(currentX - centerX, 2) + 
+                Math.pow(currentY - centerY, 2)
+            );
+            const maxDistance = Math.min(rect.width, rect.height) / 2;
+            const normalizedDistance = distanceFromCenter / maxDistance;
+            
+            // Dead zone: no movement if too close to center (12% of pad radius)
+            const deadZone = 0.12;
+            if (normalizedDistance < deadZone && Math.abs(deltaX) < 2 && Math.abs(deltaY) < 2) {
+                this.touchpadVelocity = { x: 0, y: 0 };
+                return;
+            }
+            
+            // Convert pixel movement to screen movement with adaptive sensitivity
+            // More sensitive near edges, less sensitive in center for precision
+            const sensitivity = 0.35 + (normalizedDistance * 0.45); // 0.35 to 0.8
+            
+            // Pixel-to-screen ratio (how many screen pixels per touchpad pixel)
+            const pixelToScreenRatio = 1.0;
+            
+            // Use relative movement (delta) for smoother, more predictable control
+            this.touchpadVelocity = {
+                x: deltaX * pixelToScreenRatio * sensitivity,
+                y: deltaY * pixelToScreenRatio * sensitivity
+            };
+        };
+        
+        // Touch/Mouse end
+        const handleEnd = () => {
+            isTouching = false;
+            this.touchpadActive = false;
+            this.touchpadVelocity = { x: 0, y: 0 };
+            
+            // Hide indicator
+            if (indicator) {
+                indicator.classList.remove('active');
+            }
+            
+            // Stop movement
+            if (this.touchpadInterval) {
+                clearInterval(this.touchpadInterval);
+                this.touchpadInterval = null;
+            }
+        };
+        
+        // Mouse events
+        touchpad.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            handleStart(e.clientX, e.clientY);
+        });
+        
+        touchpad.addEventListener('mousemove', (e) => {
+            if (isTouching) {
+                e.preventDefault();
+                handleMove(e.clientX, e.clientY);
+            }
+        });
+        
+        touchpad.addEventListener('mouseup', (e) => {
+            e.preventDefault();
+            handleEnd();
+        });
+        
+        touchpad.addEventListener('mouseleave', () => {
+            if (isTouching) {
+                handleEnd();
+            }
+        });
+        
+        // Touch events
+        touchpad.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            handleStart(touch.clientX, touch.clientY);
+        });
+        
+        touchpad.addEventListener('touchmove', (e) => {
+            if (isTouching) {
+                e.preventDefault();
+                const touch = e.touches[0];
+                handleMove(touch.clientX, touch.clientY);
+            }
+        });
+        
+        touchpad.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            handleEnd();
+        });
+        
+        touchpad.addEventListener('touchcancel', () => {
+            if (isTouching) {
+                handleEnd();
+            }
+        });
+        
+        // Mode toggle
+        const modeToggle = document.getElementById('touchpad-mode-toggle');
+        const modeIndicator = document.getElementById('touchpad-mode-indicator');
+        const modeText = document.getElementById('mode-text');
+        
+        if (modeToggle) {
+            modeToggle.addEventListener('click', () => {
+                this.touchpadMode = this.touchpadMode === 'move' ? 'scroll' : 'move';
+                const modeLabel = this.touchpadMode === 'move' ? 'Move' : 'Scroll';
+                if (modeIndicator) {
+                    modeIndicator.textContent = modeLabel;
+                }
+                if (modeText) {
+                    modeText.textContent = modeLabel;
+                }
+            });
+        }
+    },
+    
+    getCanvasCoordinates(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        // Get click position relative to canvas
+        const canvasX = e.clientX - rect.left;
+        const canvasY = e.clientY - rect.top;
+        
+        // Convert canvas coordinates to actual screen coordinates
+        // Make sure scale factors are initialized
+        if (!this.scaleX || !this.scaleY) {
+            this.scaleX = this.screenSize.width / this.canvas.width;
+            this.scaleY = this.screenSize.height / this.canvas.height;
+        }
+        
+        const x = canvasX * this.scaleX;
+        const y = canvasY * this.scaleY;
+        
+        // Clamp to screen bounds
+        const clampedX = Math.max(0, Math.min(this.screenSize.width, Math.round(x)));
+        const clampedY = Math.max(0, Math.min(this.screenSize.height, Math.round(y)));
+        
+        return { x: clampedX, y: clampedY };
+    },
+    
+    getTouchCoordinates(touch) {
+        const rect = this.canvas.getBoundingClientRect();
+        // Get touch position relative to canvas
+        const canvasX = touch.clientX - rect.left;
+        const canvasY = touch.clientY - rect.top;
+        
+        // Convert canvas coordinates to actual screen coordinates
+        if (!this.scaleX || !this.scaleY) {
+            this.scaleX = this.screenSize.width / this.canvas.width;
+            this.scaleY = this.screenSize.height / this.canvas.height;
+        }
+        
+        const x = canvasX * this.scaleX;
+        const y = canvasY * this.scaleY;
+        
+        // Clamp to screen bounds
+        const clampedX = Math.max(0, Math.min(this.screenSize.width, Math.round(x)));
+        const clampedY = Math.max(0, Math.min(this.screenSize.height, Math.round(y)));
+        
+        return { x: clampedX, y: clampedY };
+    },
+    
+    async moveMouse(x, y, relative) {
+        try {
+            await fetch('/remote/mouse/move', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ x, y, relative })
+            });
+            
+            // Update current mouse position
+            if (relative) {
+                this.currentMousePos.x += x;
+                this.currentMousePos.y += y;
+            } else {
+                this.currentMousePos.x = x;
+                this.currentMousePos.y = y;
+            }
+            
+            // Clamp to screen bounds
+            this.currentMousePos.x = Math.max(0, Math.min(this.screenSize.width, this.currentMousePos.x));
+            this.currentMousePos.y = Math.max(0, Math.min(this.screenSize.height, this.currentMousePos.y));
+            
+            // Redraw cursor indicator
+            this.drawCursorIndicator();
+            this.updateCursorPosition();
+        } catch (error) {
+            console.error('Error moving mouse:', error);
+        }
+    },
+    
+    async clickMouse(button, x, y) {
+        try {
+            await fetch('/remote/mouse/click', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ button, x, y })
+            });
+        } catch (error) {
+            console.error('Error clicking mouse:', error);
+        }
+    },
+    
+    async scrollMouse(clicks) {
+        try {
+            // Use current mouse position or center of screen
+            const coords = this.currentMousePos || { x: this.screenSize.width / 2, y: this.screenSize.height / 2 };
+            await fetch('/remote/mouse/scroll', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...coords, clicks })
+            });
+        } catch (error) {
+            console.error('Error scrolling mouse:', error);
+        }
+    },
+    
+    async moveMouseDirection(direction, distance = 20) {
+        // Move mouse in a direction
+        let dx = 0, dy = 0;
+        switch(direction) {
+            case 'up': dy = -distance; break;
+            case 'down': dy = distance; break;
+            case 'left': dx = -distance; break;
+            case 'right': dx = distance; break;
+        }
+        await this.moveMouse(dx, dy, true);
+    },
+    
+    async centerMouse() {
+        // Move mouse to center of screen
+        const x = this.screenSize.width / 2;
+        const y = this.screenSize.height / 2;
+        await this.moveMouse(x, y, false);
+    },
+    
+    async sendKey(key) {
+        try {
+            await fetch('/remote/keyboard/press', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ key })
+            });
+        } catch (error) {
+            console.error('Error sending key:', error);
+        }
+    },
+    
+    async typeText(text) {
+        try {
+            await fetch('/remote/keyboard/type', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text })
+            });
+        } catch (error) {
+            console.error('Error typing text:', error);
+        }
+    },
+    
+    updateStatus(message, color) {
+        const status = document.getElementById('remote-desktop-status');
+        if (status) {
+            status.innerHTML = `<i class="fas fa-circle" style="color: ${color};"></i> ${message}`;
+        }
+    },
+    
+    drawCursorIndicator() {
+        if (!this.ctx || !this.canvas || !this.isActive) return;
+        
+        // Draw cursor position indicator
+        const x = this.currentMousePos.x * this.scale;
+        const y = this.currentMousePos.y * this.scale;
+        
+        // Draw crosshair
+        this.ctx.strokeStyle = '#00ff00';
+        this.ctx.lineWidth = 2;
+        this.ctx.setLineDash([5, 5]);
+        
+        // Horizontal line
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - 15, y);
+        this.ctx.lineTo(x + 15, y);
+        this.ctx.stroke();
+        
+        // Vertical line
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y - 15);
+        this.ctx.lineTo(x, y + 15);
+        this.ctx.stroke();
+        
+        // Circle at center
+        this.ctx.setLineDash([]);
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 8, 0, 2 * Math.PI);
+        this.ctx.stroke();
+        
+        // Fill center
+        this.ctx.fillStyle = '#00ff00';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        this.ctx.fill();
+    },
+    
+    updateCursorPosition() {
+        const positionElement = document.getElementById('remote-cursor-position');
+        if (positionElement) {
+            positionElement.textContent = `${Math.round(this.currentMousePos.x)}, ${Math.round(this.currentMousePos.y)}`;
+        }
+    }
+};
+
 // Make functions globally available
-window.screenshot = screenshot;
-window.clipboard = clipboard;
-window.appLauncher = appLauncher;
 window.fileExplorer = fileExplorer;
+window.remoteDesktop = remoteDesktop;
 
 // Event listeners
 document.addEventListener('DOMContentLoaded', () => {
@@ -1039,20 +1530,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => updater.checkForUpdates(), CONFIG.UPDATE_CHECK_INTERVAL);
     
     // Initialize remote control features
-    clipboard.load();
-    appLauncher.loadCommonApps();
     fileExplorer.load('~');
     
     // Set up remote control event listeners
-    const takeScreenshotBtn = document.getElementById('take-screenshot');
-    if (takeScreenshotBtn) {
-        takeScreenshotBtn.addEventListener('click', () => screenshot.capture());
-    }
-    
-    // Download screenshot button will be added dynamically after screenshot is taken
-    document.getElementById('set-clipboard').addEventListener('click', () => clipboard.set());
-    document.getElementById('refresh-clipboard').addEventListener('click', () => clipboard.load());
-    document.getElementById('launch-custom-app').addEventListener('click', () => appLauncher.launchCustom());
     const fileExplorerGo = document.getElementById('file-explorer-go');
     const fileExplorerBack = document.getElementById('file-explorer-back');
     const fileExplorerHome = document.getElementById('file-explorer-home');
@@ -1068,9 +1548,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Allow Enter key in inputs
-    document.getElementById('custom-app-input').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') appLauncher.launchCustom();
-    });
     document.getElementById('file-explorer-path').addEventListener('keypress', (e) => {
         if (e.key === 'Enter') fileExplorer.goToPath();
     });
@@ -1158,6 +1635,81 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('start-speed-test').addEventListener('click', () => {
         speedTest.run();
     });
+    
+    // Remote Desktop event listeners
+    const startRemoteDesktop = document.getElementById('start-remote-desktop');
+    const stopRemoteDesktop = document.getElementById('stop-remote-desktop');
+    const remoteSendKey = document.getElementById('remote-send-key');
+    const remoteKeyboardInput = document.getElementById('remote-keyboard-input');
+    
+    if (startRemoteDesktop) {
+        startRemoteDesktop.addEventListener('click', () => remoteDesktop.start());
+    }
+    if (stopRemoteDesktop) {
+        stopRemoteDesktop.addEventListener('click', () => remoteDesktop.stop());
+    }
+    
+    // Touchpad controller buttons
+    const touchpadLeftClick = document.getElementById('touchpad-left-click');
+    const touchpadRightClick = document.getElementById('touchpad-right-click');
+    const touchpadScrollUp = document.getElementById('touchpad-scroll-up');
+    const touchpadScrollDown = document.getElementById('touchpad-scroll-down');
+    
+    if (touchpadLeftClick) {
+        touchpadLeftClick.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (remoteDesktop.isActive) {
+                // Click at current mouse position (don't send coordinates)
+                remoteDesktop.clickMouse('left');
+            }
+        });
+    }
+    if (touchpadRightClick) {
+        touchpadRightClick.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (remoteDesktop.isActive) {
+                // Click at current mouse position (don't send coordinates)
+                remoteDesktop.clickMouse('right');
+            }
+        });
+    }
+    if (touchpadScrollUp) {
+        touchpadScrollUp.addEventListener('click', () => {
+            if (remoteDesktop.isActive) {
+                remoteDesktop.scrollMouse(15); // Faster scrolling
+            }
+        });
+    }
+    if (touchpadScrollDown) {
+        touchpadScrollDown.addEventListener('click', () => {
+            if (remoteDesktop.isActive) {
+                remoteDesktop.scrollMouse(-15); // Faster scrolling
+            }
+        });
+    }
+    
+    if (remoteSendKey) {
+        remoteSendKey.addEventListener('click', () => {
+            const input = remoteKeyboardInput ? remoteKeyboardInput.value.trim() : '';
+            if (input) {
+                if (input.length === 1 || ['enter', 'space', 'tab', 'escape', 'backspace', 'delete'].includes(input.toLowerCase())) {
+                    remoteDesktop.sendKey(input.toLowerCase());
+                } else {
+                    remoteDesktop.typeText(input);
+                }
+                if (remoteKeyboardInput) remoteKeyboardInput.value = '';
+            }
+        });
+    }
+    if (remoteKeyboardInput) {
+        remoteKeyboardInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && remoteSendKey) {
+                remoteSendKey.click();
+            }
+        });
+    }
 });
 
 // Make functions globally available

@@ -58,27 +58,16 @@ import psutil
 from processes import get_top_processes, kill_process
 from system_info import get_system_info
 from network_monitor import get_network_stats, get_active_connections
-# Try to import remote control modules, handle gracefully if not available
+# Try to import remote desktop module, handle gracefully if not available
 try:
-    from screenshot import take_screenshot
-    SCREENSHOT_AVAILABLE = True
+    from remote_desktop import (
+        get_screen_frame, move_mouse, click_mouse, scroll_mouse,
+        press_key, type_text, get_screen_size
+    )
+    REMOTE_DESKTOP_AVAILABLE = True
 except ImportError:
-    SCREENSHOT_AVAILABLE = False
-    logger.warning("Screenshot module not available. Install pyautogui to enable screenshots.")
-
-try:
-    from clipboard_manager import get_clipboard, set_clipboard
-    CLIPBOARD_AVAILABLE = True
-except ImportError:
-    CLIPBOARD_AVAILABLE = False
-    logger.warning("Clipboard module not available. Install pyperclip to enable clipboard features.")
-
-try:
-    from app_launcher import get_common_apps, launch_app, get_installed_apps
-    APP_LAUNCHER_AVAILABLE = True
-except ImportError:
-    APP_LAUNCHER_AVAILABLE = False
-    logger.warning("App launcher module not available.")
+    REMOTE_DESKTOP_AVAILABLE = False
+    logger.warning("Remote desktop module not available. Install pyautogui to enable remote desktop features.")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -484,101 +473,150 @@ def network_connections_endpoint():
         return jsonify({'error': str(e), 'connections': []}), 500
 
 
-# ==================== SCREENSHOT ENDPOINTS ====================
+# ==================== REMOTE DESKTOP ENDPOINTS ====================
 
-@app.route('/screenshot', methods=['GET'])
+@app.route('/remote/screen_size', methods=['GET'])
 @handle_api_errors
-def screenshot_endpoint():
-    """Take a screenshot and return as base64"""
-    if not SCREENSHOT_AVAILABLE:
+def get_screen_size_endpoint():
+    """Get screen size"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop feature is not available.', 'available': False}), 503
+    try:
+        width, height = get_screen_size()
+        return jsonify({'width': width, 'height': height, 'available': True})
+    except Exception as e:
+        logger.error(f"Error getting screen size: {e}")
+        return jsonify({'error': str(e), 'width': 1920, 'height': 1080, 'available': True}), 500
+
+
+@app.route('/remote/frame', methods=['GET'])
+@handle_api_errors
+def get_screen_frame_endpoint():
+    """Get current screen frame"""
+    if not REMOTE_DESKTOP_AVAILABLE:
         return jsonify({
-            'error': 'Screenshot feature is not available. Please install pyautogui.',
+            'error': 'Remote desktop feature is not available. Please install pyautogui.',
             'available': False
         }), 503
     
     try:
-        img_base64 = take_screenshot()
-        return jsonify({'image': img_base64, 'format': 'png', 'available': True})
+        img_base64, timestamp = get_screen_frame()
+        return jsonify({
+            'image': img_base64,
+            'format': 'png',
+            'timestamp': timestamp,
+            'available': True
+        })
     except Exception as e:
-        logger.error(f"Error taking screenshot: {e}")
+        logger.error(f"Error getting screen frame: {e}")
         return jsonify({'error': str(e), 'available': True}), 500
 
 
-# ==================== CLIPBOARD ENDPOINTS ====================
-
-@app.route('/clipboard', methods=['GET'])
+@app.route('/remote/mouse/move', methods=['POST'])
 @handle_api_errors
-def get_clipboard_endpoint():
-    """Get current clipboard content"""
-    if not CLIPBOARD_AVAILABLE:
-        return jsonify({
-            'error': 'Clipboard feature is not available. Please install pyperclip.',
-            'available': False
-        }), 503
+def mouse_move_endpoint():
+    """Move mouse"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop not available'}), 503
     
     try:
-        content = get_clipboard()
-        return jsonify({'content': content or '', 'available': True})
+        data = request.json
+        x = float(data.get('x', 0))
+        y = float(data.get('y', 0))
+        relative = data.get('relative', False)
+        
+        if move_mouse(x, y, relative):
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to move mouse'}), 500
     except Exception as e:
-        logger.error(f"Error getting clipboard: {e}")
-        return jsonify({'error': str(e), 'available': True}), 500
+        logger.error(f"Error moving mouse: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
-@app.route('/clipboard', methods=['POST'])
+@app.route('/remote/mouse/click', methods=['POST'])
 @handle_api_errors
-def set_clipboard_endpoint():
-    """Set clipboard content"""
-    if not CLIPBOARD_AVAILABLE:
-        return jsonify({
-            'error': 'Clipboard feature is not available. Please install pyperclip.',
-            'available': False
-        }), 503
+def mouse_click_endpoint():
+    """Click mouse at current position (does not move mouse)"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop not available'}), 503
+    
+    try:
+        data = request.json
+        button = data.get('button', 'left')
+        # Ignore x, y coordinates - always click at current mouse position
+        # This prevents the mouse from jumping around, especially in multi-monitor setups
+        if click_mouse(button, None, None):
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to click'}), 500
+    except Exception as e:
+        logger.error(f"Error clicking mouse: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/remote/mouse/scroll', methods=['POST'])
+@handle_api_errors
+def mouse_scroll_endpoint():
+    """Scroll mouse"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop not available'}), 503
+    
+    try:
+        data = request.json
+        x = float(data.get('x', 0))
+        y = float(data.get('y', 0))
+        clicks = int(data.get('clicks', 0))
+        
+        if scroll_mouse(x, y, clicks):
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to scroll'}), 500
+    except Exception as e:
+        logger.error(f"Error scrolling mouse: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/remote/keyboard/press', methods=['POST'])
+@handle_api_errors
+def keyboard_press_endpoint():
+    """Press a key"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop not available'}), 503
+    
+    try:
+        data = request.json
+        key = data.get('key')
+        
+        if not key:
+            return jsonify({'error': 'Key is required'}), 400
+        
+        if press_key(key):
+            return jsonify({'status': 'success'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to press key'}), 500
+    except Exception as e:
+        logger.error(f"Error pressing key: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/remote/keyboard/type', methods=['POST'])
+@handle_api_errors
+def keyboard_type_endpoint():
+    """Type text"""
+    if not REMOTE_DESKTOP_AVAILABLE:
+        return jsonify({'error': 'Remote desktop not available'}), 503
     
     try:
         data = request.json
         text = data.get('text', '')
         
-        if set_clipboard(text):
-            return jsonify({'status': 'success', 'message': 'Clipboard updated', 'available': True})
+        if type_text(text):
+            return jsonify({'status': 'success'})
         else:
-            return jsonify({'status': 'error', 'message': 'Failed to set clipboard', 'available': True}), 500
+            return jsonify({'status': 'error', 'message': 'Failed to type text'}), 500
     except Exception as e:
-        logger.error(f"Error setting clipboard: {e}")
-        return jsonify({'error': str(e), 'available': True}), 500
-
-
-# ==================== APP LAUNCHER ENDPOINTS ====================
-
-@app.route('/apps/common', methods=['GET'])
-@handle_api_errors
-def get_common_apps_endpoint():
-    """Get list of common applications"""
-    try:
-        apps = get_common_apps()
-        return jsonify({'apps': apps})
-    except Exception as e:
-        logger.error(f"Error getting common apps: {e}")
-        return jsonify({'error': str(e), 'apps': []}), 500
-
-
-@app.route('/apps/launch', methods=['POST'])
-@handle_api_errors
-def launch_app_endpoint():
-    """Launch an application"""
-    try:
-        data = request.json
-        app_name_or_path = data.get('app')
-        
-        if not app_name_or_path:
-            return jsonify({'error': 'App name or path is required'}), 400
-        
-        success, message = launch_app(app_name_or_path)
-        if success:
-            return jsonify({'status': 'success', 'message': message})
-        else:
-            return jsonify({'status': 'error', 'message': message}), 400
-    except Exception as e:
-        logger.error(f"Error launching app: {e}")
+        logger.error(f"Error typing text: {e}")
         return jsonify({'error': str(e)}), 500
 
 
