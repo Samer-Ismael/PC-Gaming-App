@@ -208,6 +208,151 @@
                 </p>
             </div>
         </div>
+
+        <!-- Process Manager Card -->
+        <div class="card">
+            <h2><i class="fas fa-tasks"></i> Process Manager</h2>
+            <div style="margin-bottom: 1rem; display: flex; gap: 10px; align-items: center;">
+                <button id="sort-cpu" class="sort-button active" onclick="processManager.sortBy('cpu')">
+                    <i class="fas fa-microchip"></i> Sort by CPU
+                </button>
+                <button id="sort-memory" class="sort-button" onclick="processManager.sortBy('memory')">
+                    <i class="fas fa-memory"></i> Sort by Memory
+                </button>
+            </div>
+            <div id="processes-list" style="max-height: 400px; overflow-y: auto;">
+                <p style="text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading processes...
+                </p>
+            </div>
+        </div>
+
+        <!-- System Information Card -->
+        <div class="card">
+            <h2><i class="fas fa-info-circle"></i> System Information</h2>
+            <div id="system-info-content">
+                <p style="text-align: center; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin"></i> Loading system information...
+                </p>
+            </div>
+        </div>
+
+        <!-- Network Monitor Card -->
+        <div class="card">
+            <h2><i class="fas fa-network-wired"></i> Network Monitor</h2>
+            <div id="network-stats-content">
+                <p>
+                    <i class="fas fa-arrow-circle-up"></i>
+                    <span>Upload Speed:</span>
+                    <span id="network-upload-speed" class="metric-value">—</span> Mbps
+                </p>
+                <p>
+                    <i class="fas fa-arrow-circle-down"></i>
+                    <span>Download Speed:</span>
+                    <span id="network-download-speed" class="metric-value">—</span> Mbps
+                </p>
+                <p>
+                    <i class="fas fa-server"></i>
+                    <span>Total Sent:</span>
+                    <span id="network-sent" class="metric-value">—</span> MB
+                </p>
+                <p>
+                    <i class="fas fa-server"></i>
+                    <span>Total Received:</span>
+                    <span id="network-received" class="metric-value">—</span> MB
+                </p>
+                <details style="margin-top: 1rem;">
+                    <summary style="cursor: pointer; font-weight: bold; color: var(--text-secondary);">
+                        <i class="fas fa-list"></i> Active Connections
+                    </summary>
+                    <div id="network-connections-list" style="margin-top: 1rem; max-height: 300px; overflow-y: auto;">
+                        <p style="text-align: center; color: var(--text-muted);">
+                            <i class="fas fa-spinner fa-spin"></i> Loading connections...
+                        </p>
+                    </div>
+                </details>
+            </div>
+        </div>
+
+        <!-- Remote Control Section -->
+        <div class="card" style="grid-column: 1 / -1;">
+            <h2><i class="fas fa-mobile-alt"></i> Remote Control</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                
+                <!-- Screenshot -->
+                <div class="remote-control-item">
+                    <h3><i class="fas fa-camera"></i> Screenshot</h3>
+                    <button id="take-screenshot" class="remote-button">
+                        <i class="fas fa-camera"></i> Capture Screen
+                    </button>
+                    <div id="screenshot-container" style="margin-top: 1rem; display: none;">
+                        <img id="screenshot-image" style="max-width: 100%; border-radius: 8px; border: 2px solid rgba(255,255,255,0.1);" alt="Screenshot">
+                        <button id="download-screenshot" class="remote-button" style="margin-top: 0.5rem; width: 100%;">
+                            <i class="fas fa-download"></i> Download
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Clipboard Manager -->
+                <div class="remote-control-item">
+                    <h3><i class="fas fa-clipboard"></i> Clipboard</h3>
+                    <div id="clipboard-content" style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px; min-height: 60px; max-height: 150px; overflow-y: auto; word-wrap: break-word; font-size: 0.9rem;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                    <textarea id="clipboard-input" placeholder="Type text to set clipboard..." style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-primary); font-family: inherit; resize: vertical; min-height: 60px; margin-bottom: 10px;"></textarea>
+                    <button id="set-clipboard" class="remote-button" style="width: 100%;">
+                        <i class="fas fa-copy"></i> Set Clipboard
+                    </button>
+                    <button id="refresh-clipboard" class="remote-button" style="width: 100%; margin-top: 5px; background: rgba(255,255,255,0.1);">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+
+                <!-- App Launcher -->
+                <div class="remote-control-item">
+                    <h3><i class="fas fa-rocket"></i> Launch Apps</h3>
+                    <div id="common-apps" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-bottom: 10px;">
+                        <p style="text-align: center; color: var(--text-muted); grid-column: 1 / -1;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading apps...
+                        </p>
+                    </div>
+                    <input type="text" id="custom-app-input" placeholder="Type app name or path..." style="width: 100%; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text-primary); font-family: inherit; margin-bottom: 10px;">
+                    <button id="launch-custom-app" class="remote-button" style="width: 100%;">
+                        <i class="fas fa-play"></i> Launch
+                    </button>
+                </div>
+
+                <!-- File Explorer -->
+                <div class="remote-control-item" style="grid-column: 1 / -1;">
+                    <h3><i class="fas fa-folder-open"></i> File Explorer</h3>
+                    <div class="file-explorer-controls">
+                        <div class="file-explorer-nav">
+                            <button id="file-explorer-back" class="remote-button" title="Go Back">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <button id="file-explorer-home" class="remote-button" title="Home Directory">
+                                <i class="fas fa-home"></i>
+                            </button>
+                        </div>
+                        <div class="file-explorer-path-container">
+                            <input type="text" id="file-explorer-path" value="~" class="file-explorer-path-input" placeholder="Enter path...">
+                            <button id="file-explorer-go" class="remote-button" title="Go to Path">
+                                <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="file-explorer-breadcrumb" class="file-explorer-breadcrumb">
+                        <span class="breadcrumb-label">Current Path:</span>
+                        <span id="breadcrumb-path" class="breadcrumb-path">~</span>
+                    </div>
+                    <div id="file-explorer-list" class="file-explorer-list">
+                        <p style="text-align: center; color: var(--text-muted);">
+                            <i class="fas fa-spinner fa-spin"></i> Loading files...
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     
     <script src="/static/script.js"></script>

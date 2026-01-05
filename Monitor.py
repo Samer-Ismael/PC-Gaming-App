@@ -55,6 +55,30 @@ from disk import get_disk_metrics, clear_temp_files
 import updater
 import media
 import psutil
+from processes import get_top_processes, kill_process
+from system_info import get_system_info
+from network_monitor import get_network_stats, get_active_connections
+# Try to import remote control modules, handle gracefully if not available
+try:
+    from screenshot import take_screenshot
+    SCREENSHOT_AVAILABLE = True
+except ImportError:
+    SCREENSHOT_AVAILABLE = False
+    logger.warning("Screenshot module not available. Install pyautogui to enable screenshots.")
+
+try:
+    from clipboard_manager import get_clipboard, set_clipboard
+    CLIPBOARD_AVAILABLE = True
+except ImportError:
+    CLIPBOARD_AVAILABLE = False
+    logger.warning("Clipboard module not available. Install pyperclip to enable clipboard features.")
+
+try:
+    from app_launcher import get_common_apps, launch_app, get_installed_apps
+    APP_LAUNCHER_AVAILABLE = True
+except ImportError:
+    APP_LAUNCHER_AVAILABLE = False
+    logger.warning("App launcher module not available.")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -380,6 +404,278 @@ def clear_temp_files_route():
             "status": "error",
             "message": str(e)
         }), 500
+
+
+# ==================== PROCESS MANAGER ENDPOINTS ====================
+
+@app.route('/processes', methods=['GET'])
+@handle_api_errors
+def get_processes():
+    """Get top processes by CPU or memory usage"""
+    try:
+        sort_by = request.args.get('sort_by', 'cpu')  # 'cpu' or 'memory'
+        limit = int(request.args.get('limit', 10))
+        processes = get_top_processes(limit=limit, sort_by=sort_by)
+        return jsonify({'processes': processes})
+    except Exception as e:
+        logger.error(f"Error getting processes: {e}")
+        return jsonify({'error': str(e), 'processes': []}), 500
+
+
+@app.route('/kill_process', methods=['POST'])
+@handle_api_errors
+def kill_process_endpoint():
+    """Kill a process by PID"""
+    try:
+        data = request.json
+        pid = data.get('pid')
+        
+        if not pid:
+            return jsonify({'error': 'PID is required'}), 400
+        
+        success, message = kill_process(int(pid))
+        if success:
+            return jsonify({'status': 'success', 'message': message}), 200
+        else:
+            return jsonify({'status': 'error', 'message': message}), 400
+    except Exception as e:
+        logger.error(f"Error killing process: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== SYSTEM INFO ENDPOINTS ====================
+
+@app.route('/system_info', methods=['GET'])
+@handle_api_errors
+def system_info_endpoint():
+    """Get detailed system information"""
+    try:
+        info = get_system_info()
+        return jsonify(info)
+    except Exception as e:
+        logger.error(f"Error getting system info: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== NETWORK MONITOR ENDPOINTS ====================
+
+@app.route('/network_stats', methods=['GET'])
+@handle_api_errors
+def network_stats_endpoint():
+    """Get real-time network statistics"""
+    try:
+        stats = get_network_stats()
+        return jsonify(stats)
+    except Exception as e:
+        logger.error(f"Error getting network stats: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/network_connections', methods=['GET'])
+@handle_api_errors
+def network_connections_endpoint():
+    """Get active network connections"""
+    try:
+        limit = int(request.args.get('limit', 20))
+        connections = get_active_connections(limit=limit)
+        return jsonify({'connections': connections})
+    except Exception as e:
+        logger.error(f"Error getting network connections: {e}")
+        return jsonify({'error': str(e), 'connections': []}), 500
+
+
+# ==================== SCREENSHOT ENDPOINTS ====================
+
+@app.route('/screenshot', methods=['GET'])
+@handle_api_errors
+def screenshot_endpoint():
+    """Take a screenshot and return as base64"""
+    if not SCREENSHOT_AVAILABLE:
+        return jsonify({
+            'error': 'Screenshot feature is not available. Please install pyautogui.',
+            'available': False
+        }), 503
+    
+    try:
+        img_base64 = take_screenshot()
+        return jsonify({'image': img_base64, 'format': 'png', 'available': True})
+    except Exception as e:
+        logger.error(f"Error taking screenshot: {e}")
+        return jsonify({'error': str(e), 'available': True}), 500
+
+
+# ==================== CLIPBOARD ENDPOINTS ====================
+
+@app.route('/clipboard', methods=['GET'])
+@handle_api_errors
+def get_clipboard_endpoint():
+    """Get current clipboard content"""
+    if not CLIPBOARD_AVAILABLE:
+        return jsonify({
+            'error': 'Clipboard feature is not available. Please install pyperclip.',
+            'available': False
+        }), 503
+    
+    try:
+        content = get_clipboard()
+        return jsonify({'content': content or '', 'available': True})
+    except Exception as e:
+        logger.error(f"Error getting clipboard: {e}")
+        return jsonify({'error': str(e), 'available': True}), 500
+
+
+@app.route('/clipboard', methods=['POST'])
+@handle_api_errors
+def set_clipboard_endpoint():
+    """Set clipboard content"""
+    if not CLIPBOARD_AVAILABLE:
+        return jsonify({
+            'error': 'Clipboard feature is not available. Please install pyperclip.',
+            'available': False
+        }), 503
+    
+    try:
+        data = request.json
+        text = data.get('text', '')
+        
+        if set_clipboard(text):
+            return jsonify({'status': 'success', 'message': 'Clipboard updated', 'available': True})
+        else:
+            return jsonify({'status': 'error', 'message': 'Failed to set clipboard', 'available': True}), 500
+    except Exception as e:
+        logger.error(f"Error setting clipboard: {e}")
+        return jsonify({'error': str(e), 'available': True}), 500
+
+
+# ==================== APP LAUNCHER ENDPOINTS ====================
+
+@app.route('/apps/common', methods=['GET'])
+@handle_api_errors
+def get_common_apps_endpoint():
+    """Get list of common applications"""
+    try:
+        apps = get_common_apps()
+        return jsonify({'apps': apps})
+    except Exception as e:
+        logger.error(f"Error getting common apps: {e}")
+        return jsonify({'error': str(e), 'apps': []}), 500
+
+
+@app.route('/apps/launch', methods=['POST'])
+@handle_api_errors
+def launch_app_endpoint():
+    """Launch an application"""
+    try:
+        data = request.json
+        app_name_or_path = data.get('app')
+        
+        if not app_name_or_path:
+            return jsonify({'error': 'App name or path is required'}), 400
+        
+        success, message = launch_app(app_name_or_path)
+        if success:
+            return jsonify({'status': 'success', 'message': message})
+        else:
+            return jsonify({'status': 'error', 'message': message}), 400
+    except Exception as e:
+        logger.error(f"Error launching app: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+# ==================== FILE EXPLORER ENDPOINTS ====================
+
+@app.route('/files/list', methods=['GET'])
+@handle_api_errors
+def list_files_endpoint():
+    """List files in a directory"""
+    try:
+        path = request.args.get('path', '~')
+        logger.debug(f"File list request for path: {path}")
+        
+        # Expand ~ to home directory
+        if path == '~' or path.startswith('~/'):
+            path = os.path.expanduser(path)
+        
+        # Convert to absolute path
+        path = os.path.abspath(path)
+        home_dir = os.path.abspath(os.path.expanduser('~'))
+        
+        logger.debug(f"Expanded path: {path}, Home dir: {home_dir}")
+        
+        # Security: prevent directory traversal - only allow access to home directory and subdirectories
+        if not path.startswith(home_dir):
+            logger.warning(f"Access denied for path: {path}")
+            return jsonify({'error': 'Access denied. Only home directory access is allowed.'}), 403
+        
+        if not os.path.exists(path):
+            logger.warning(f"Path does not exist: {path}")
+            return jsonify({'error': f'Path does not exist: {path}'}), 404
+        
+        if not os.path.isdir(path):
+            logger.warning(f"Path is not a directory: {path}")
+            return jsonify({'error': 'Path is not a directory'}), 400
+        
+        files = []
+        dirs = []
+        
+        try:
+            for item in os.listdir(path):
+                item_path = os.path.join(path, item)
+                try:
+                    stat = os.stat(item_path)
+                    item_info = {
+                        'name': item,
+                        'path': item_path,
+                        'size': stat.st_size,
+                        'is_dir': os.path.isdir(item_path),
+                        'modified': stat.st_mtime
+                    }
+                    if os.path.isdir(item_path):
+                        dirs.append(item_info)
+                    else:
+                        files.append(item_info)
+                except (OSError, PermissionError):
+                    pass
+            
+            # Sort: directories first, then files
+            dirs.sort(key=lambda x: x['name'].lower())
+            files.sort(key=lambda x: x['name'].lower())
+            
+            return jsonify({
+                'path': path,
+                'items': dirs + files
+            })
+        except PermissionError:
+            return jsonify({'error': 'Permission denied'}), 403
+    except Exception as e:
+        logger.error(f"Error listing files: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/files/download', methods=['GET'])
+@handle_api_errors
+def download_file_endpoint():
+    """Download a file"""
+    try:
+        file_path = request.args.get('path')
+        
+        if not file_path:
+            return jsonify({'error': 'File path is required'}), 400
+        
+        # Security check
+        if not os.path.abspath(file_path).startswith(os.path.abspath(os.path.expanduser('~'))):
+            return jsonify({'error': 'Access denied'}), 403
+        
+        if not os.path.exists(file_path) or os.path.isdir(file_path):
+            return jsonify({'error': 'File not found'}), 404
+        
+        directory = os.path.dirname(file_path)
+        filename = os.path.basename(file_path)
+        
+        return send_from_directory(directory, filename, as_attachment=True)
+    except Exception as e:
+        logger.error(f"Error downloading file: {e}")
+        return jsonify({'error': str(e)}), 500
 
 
 # ==================== UPDATE ENDPOINTS ====================

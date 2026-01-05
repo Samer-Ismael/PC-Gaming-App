@@ -609,3 +609,342 @@ header a:hover {
 .card span.updated {
     animation: valueUpdate 0.5s ease;
 }
+
+/* Process Manager Styles */
+.sort-button {
+    padding: 8px 16px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    font-weight: 500;
+}
+
+.sort-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+}
+
+.sort-button.active {
+    background: var(--primary-gradient);
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+#processes-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+#processes-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#processes-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#processes-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+#processes-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* System Info Styles */
+#system-info-content h3 {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+#system-info-content p {
+    margin: 0.3rem 0;
+    font-size: 0.95rem;
+}
+
+/* Network Monitor Styles */
+#network-connections-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+#network-connections-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#network-connections-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#network-connections-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+details summary {
+    user-select: none;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+details summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+details[open] summary {
+    margin-bottom: 1rem;
+}
+
+/* Remote Control Styles */
+.remote-control-item {
+    background: rgba(255, 255, 255, 0.03);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.remote-control-item h3 {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.remote-button {
+    padding: 10px 20px;
+    background: var(--primary-gradient);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.remote-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+    filter: brightness(1.1);
+}
+
+.remote-button:active {
+    transform: translateY(0);
+}
+
+#file-explorer-list {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+#file-explorer-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+#file-explorer-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#file-explorer-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 3px;
+}
+
+/* File Explorer Styles */
+.file-explorer-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.file-explorer-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.file-explorer-path-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.file-explorer-path-input {
+    flex: 1;
+    min-width: 0; /* Allows input to shrink */
+    padding: 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.9rem;
+}
+
+.file-explorer-breadcrumb {
+    margin: 10px 0;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    word-break: break-all;
+}
+
+.breadcrumb-label {
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.breadcrumb-path {
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+    flex: 1;
+    min-width: 0;
+}
+
+.file-explorer-list {
+    max-height: 400px;
+    overflow-y: auto;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.file-explorer-item {
+    padding: 12px;
+    margin: 5px 0;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.file-explorer-item:hover,
+.file-explorer-item:active {
+    background: rgba(255,255,255,0.1);
+    transform: translateX(5px);
+}
+
+.file-explorer-item-icon {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.file-explorer-item-info {
+    flex: 1;
+    min-width: 0; /* Allows text to truncate */
+}
+
+.file-explorer-item-name {
+    font-weight: bold;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-explorer-item-details {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-explorer-item-action {
+    color: var(--accent-color);
+    font-size: 1rem;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .remote-control-item {
+        grid-column: 1 / -1 !important;
+    }
+    
+    .card {
+        padding: 1rem;
+    }
+    
+    #common-apps {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)) !important;
+    }
+    
+    .file-explorer-controls {
+        gap: 8px;
+    }
+    
+    .file-explorer-nav {
+        flex-wrap: wrap;
+    }
+    
+    .file-explorer-path-container {
+        flex-wrap: wrap;
+    }
+    
+    .file-explorer-path-input {
+        width: 100%;
+        min-width: 200px;
+    }
+    
+    .file-explorer-list {
+        max-height: 300px;
+    }
+    
+    .file-explorer-item {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .file-explorer-item-name {
+        font-size: 0.9rem;
+    }
+    
+    .file-explorer-item-details {
+        font-size: 0.75rem;
+    }
+    
+    .file-explorer-breadcrumb {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        gap: 6px;
+    }
+    
+    .breadcrumb-label {
+        font-size: 0.8rem;
+    }
+    
+    .breadcrumb-path {
+        font-size: 0.85rem;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+    }
+}
