@@ -391,16 +391,25 @@ function sendCommand(command) {
 const updater = {
     async checkForUpdates() {
         try {
-            const data = await api.fetchMetrics('/check-update');
+            const response = await fetch('/check-update');
+            if (!response.ok) {
+                return; // Silently fail if check fails
+            }
+            
+            const data = await response.json();
             const updateMessage = document.getElementById('update-message');
             
-            if (updateMessage && (data === true || data === 'true')) {
-                updateMessage.style.display = 'block';
-            } else if (updateMessage) {
-                updateMessage.style.display = 'none';
+            // Only show message if update is actually available (boolean true)
+            if (updateMessage) {
+                if (data === true) {
+                    updateMessage.style.display = 'block';
+                } else {
+                    updateMessage.style.display = 'none';
+                }
             }
         } catch (error) {
-            console.error('Error checking for updates:', error);
+            // Silently fail - don't spam console with update check errors
+            // console.error('Error checking for updates:', error);
         }
     },
 

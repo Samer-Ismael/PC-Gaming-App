@@ -7,8 +7,9 @@ from werkzeug.serving import WSGIRequestHandler
 import socket
 import logging
 import os
+import sys
+import ctypes
 import webbrowser
-import speedtest
 
 from config import (
     SERVER_HOST, SERVER_PORT, DEBUG, LIB_FOLDER,
@@ -17,6 +18,34 @@ from config import (
 from utils.logger import setup_logger
 from utils.errors import handle_api_errors
 from utils.cache import metrics_cache
+
+# Check for admin privileges and request if needed
+def is_admin():
+    """Check if the script is running with administrator privileges."""
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def run_as_admin():
+    """Restart the script with administrator privileges."""
+    if sys.frozen:
+        # If running as exe, use the exe path
+        script = sys.executable
+    else:
+        # If running as script, use the script path
+        script = sys.argv[0]
+    params = " ".join(sys.argv[1:]) if len(sys.argv) > 1 else ""
+    
+    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, f'"{script}" {params}', None, 1)
+    sys.exit()
+
+# Request admin privileges on startup
+if not is_admin():
+    print("Requesting administrator privileges...")
+    run_as_admin()
+
+print("Running with administrator privileges.")
 
 # Import metric modules
 from gpu import get_gpu_metrics
@@ -34,6 +63,14 @@ app = Flask(__name__)
 logger = setup_logger('PCGamingApp')
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+
+# Try to import speedtest, handle gracefully if not available or incompatible
+try:
+    import speedtest
+    SPEEDTEST_AVAILABLE = True
+except (ImportError, AttributeError, ModuleNotFoundError) as e:
+    SPEEDTEST_AVAILABLE = False
+    logger.warning(f"Speedtest module not available: {e}. Speed test feature will be disabled.")
 
 
 def get_ip_address() -> str:
@@ -179,6 +216,11 @@ def gpu_metrics():
 @handle_api_errors
 def speed_test_endpoint():
     """Run internet speed test"""
+    if not SPEEDTEST_AVAILABLE:
+        return jsonify({
+            "error": "Speed test feature is not available. The speedtest-cli module is not compatible with this Python version or executable format."
+        }), 503
+    
     try:
         st = speedtest.Speedtest()
         st.get_closest_servers()

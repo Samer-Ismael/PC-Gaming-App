@@ -37,12 +37,8 @@ def run_as_admin():
     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, f"{script} {params}", None, 1)
     sys.exit()  
 
-# Only require admin if we need hardware monitoring
-if CLR_AVAILABLE:
-    if not is_admin():
-        print("Restarting script with administrator privileges...")
-        run_as_admin()  
-    print("Running with administrator privileges.")
+# Admin check is now handled in Monitor.py
+# This module no longer requests admin privileges on import
 
 dll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib', 'OpenHardwareMonitorLib.dll')
 
