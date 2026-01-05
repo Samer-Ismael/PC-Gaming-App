@@ -27,7 +27,7 @@ EMPTY_STANDBY_LIST = LIB_FOLDER / 'EmptyStandbyList.exe'
 RAMMAP_EXE = LIB_FOLDER / 'RAMMap.exe'
 
 # App version
-APP_VERSION = "2.3.0"
+APP_VERSION = "2.3.1"
 
 # Logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
