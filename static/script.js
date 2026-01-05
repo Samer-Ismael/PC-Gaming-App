@@ -7,7 +7,7 @@
 const CONFIG = {
     METRICS_UPDATE_INTERVAL: 1000, // 1 second
     AUDIO_UPDATE_INTERVAL: 2000, // 2 seconds
-    UPDATE_CHECK_INTERVAL: 900000, // 15 minutes
+    UPDATE_CHECK_INTERVAL: 3600000, // 1 hour (backup check, main check is on startup)
     ANIMATION_DURATION: 500
 };
 
@@ -114,13 +114,27 @@ const api = {
      */
     async fetchMetrics(endpoint) {
         try {
-            const response = await fetch(endpoint);
+            const response = await fetch(endpoint, {
+                method: 'GET',
+                cache: 'no-cache',
+                signal: AbortSignal.timeout(5000) // 5 second timeout
+            });
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
-            console.error(`Error fetching ${endpoint}:`, error);
+            // Suppress connection errors to reduce console spam
+            // Only log errors that aren't connection/timeout related
+            const isConnectionError = error.name === 'TypeError' || 
+                                     error.name === 'AbortError' || 
+                                     error.message?.includes('Failed to fetch') ||
+                                     error.message?.includes('network') ||
+                                     error.message?.includes('ERR_CONNECTION');
+            
+            if (!isConnectionError) {
+                console.error(`Error fetching ${endpoint}:`, error);
+            }
             return null;
         }
     },
@@ -151,13 +165,17 @@ const metrics = {
      * Fetch and update CPU metrics
      */
     async updateCPU() {
-        const data = await api.fetchMetrics('/metrics/cpu');
-        if (data) {
-            utils.updateElement('cpu-usage', utils.formatNumber(data.usage), '%');
-            utils.updateElement('cpu-frequency-current', utils.formatNumber(data['Frequency-curent'] || data['Frequency-current']), ' MHz');
-            utils.updateElement('cpu-frequency-max', utils.formatNumber(data['Frequency-max']), ' MHz');
-            utils.updateElement('cpu-temperature', utils.formatNumber(data.temperature), '°C');
-            state.metrics.cpu = data;
+        try {
+            const data = await api.fetchMetrics('/metrics/cpu');
+            if (data) {
+                utils.updateElement('cpu-usage', utils.formatNumber(data.usage), '%');
+                utils.updateElement('cpu-frequency-current', utils.formatNumber(data['Frequency-curent'] || data['Frequency-current']), ' MHz');
+                utils.updateElement('cpu-frequency-max', utils.formatNumber(data['Frequency-max']), ' MHz');
+                utils.updateElement('cpu-temperature', utils.formatNumber(data.temperature), '°C');
+                state.metrics.cpu = data;
+            }
+        } catch (error) {
+            // Silently handle errors - metrics will show "Loading..." or previous values
         }
     },
 
@@ -165,12 +183,16 @@ const metrics = {
      * Fetch and update RAM metrics
      */
     async updateRAM() {
-        const data = await api.fetchMetrics('/metrics/ram');
-        if (data) {
-            utils.updateElement('ram-usage', utils.formatNumber(data.usage), '%');
-            utils.updateElement('ram-total', utils.formatNumber(data.total), ' GB');
-            utils.updateElement('ram-free', utils.formatNumber(data.free), ' GB');
-            state.metrics.ram = data;
+        try {
+            const data = await api.fetchMetrics('/metrics/ram');
+            if (data) {
+                utils.updateElement('ram-usage', utils.formatNumber(data.usage), '%');
+                utils.updateElement('ram-total', utils.formatNumber(data.total), ' GB');
+                utils.updateElement('ram-free', utils.formatNumber(data.free), ' GB');
+                state.metrics.ram = data;
+            }
+        } catch (error) {
+            // Silently handle errors
         }
     },
 
@@ -178,13 +200,17 @@ const metrics = {
      * Fetch and update Disk metrics
      */
     async updateDisk() {
-        const data = await api.fetchMetrics('/metrics/disk');
-        if (data) {
-            utils.updateElement('disk-usage', utils.formatNumber(data.usage), '%');
-            utils.updateElement('disk-free', utils.formatNumber(data.free_space), ' GB');
-            utils.updateElement('disk-read', utils.formatNumber(data.read_speed), ' MB');
-            utils.updateElement('disk-write', utils.formatNumber(data.write_speed), ' MB');
-            state.metrics.disk = data;
+        try {
+            const data = await api.fetchMetrics('/metrics/disk');
+            if (data) {
+                utils.updateElement('disk-usage', utils.formatNumber(data.usage), '%');
+                utils.updateElement('disk-free', utils.formatNumber(data.free_space), ' GB');
+                utils.updateElement('disk-read', utils.formatNumber(data.read_speed), ' MB');
+                utils.updateElement('disk-write', utils.formatNumber(data.write_speed), ' MB');
+                state.metrics.disk = data;
+            }
+        } catch (error) {
+            // Silently handle errors
         }
     },
 
@@ -192,14 +218,18 @@ const metrics = {
      * Fetch and update GPU metrics
      */
     async updateGPU() {
-        const data = await api.fetchMetrics('/metrics/gpu');
-        if (data) {
-            utils.updateElement('gpu-name', data.name || 'N/A');
-            utils.updateElement('gpu-temperature', utils.formatNumber(data.temperature), '°C');
-            utils.updateElement('gpu-utilization', utils.formatNumber(data.utilization), '%');
-            utils.updateElement('gpu-memory-used', utils.formatNumber(data.memory_used), ' MB');
-            utils.updateElement('gpu-memory-total', utils.formatNumber(data.memory_total), ' MB');
-            state.metrics.gpu = data;
+        try {
+            const data = await api.fetchMetrics('/metrics/gpu');
+            if (data) {
+                utils.updateElement('gpu-name', data.name || 'N/A');
+                utils.updateElement('gpu-temperature', utils.formatNumber(data.temperature), '°C');
+                utils.updateElement('gpu-utilization', utils.formatNumber(data.utilization), '%');
+                utils.updateElement('gpu-memory-used', utils.formatNumber(data.memory_used), ' MB');
+                utils.updateElement('gpu-memory-total', utils.formatNumber(data.memory_total), ' MB');
+                state.metrics.gpu = data;
+            }
+        } catch (error) {
+            // Silently handle errors
         }
     },
 
@@ -207,7 +237,8 @@ const metrics = {
      * Update all metrics
      */
     async updateAll() {
-        await Promise.all([
+        // Use Promise.allSettled to continue even if some fail
+        await Promise.allSettled([
             this.updateCPU(),
             this.updateRAM(),
             this.updateDisk(),
@@ -230,18 +261,34 @@ const speedTest = {
         utils.updateElement('ping', '—', ' ms');
         
         try {
-            const data = await api.fetchMetrics('/speed_test');
+            const response = await fetch('/speed_test');
+            const data = await response.json();
             
-            if (data && !data.error) {
+            if (response.status === 503 || (data && data.available === false)) {
+                // Speed test not available
+                utils.showError('speed-test', 'Speed test feature is not available in this version.');
+                utils.updateElement('down-speed', 'N/A', '');
+                utils.updateElement('up-speed', 'N/A', '');
+                utils.updateElement('ping', 'N/A', '');
+            } else if (data && !data.error && data.download_speed) {
+                // Success
                 utils.updateElement('down-speed', utils.formatNumber(data.download_speed), ' Mbps');
                 utils.updateElement('up-speed', utils.formatNumber(data.upload_speed), ' Mbps');
                 utils.updateElement('ping', utils.formatNumber(data.ping), ' ms');
                 utils.showSuccess('speed-test', 'Speed test completed!', 2000);
             } else {
-                utils.showError('speed-test', 'Speed test failed. Please try again.');
+                // Error from server
+                const errorMsg = data.error || 'Speed test failed. Please try again.';
+                utils.showError('speed-test', errorMsg);
+                utils.updateElement('down-speed', 'Error', '');
+                utils.updateElement('up-speed', 'Error', '');
+                utils.updateElement('ping', 'Error', '');
             }
         } catch (error) {
-            utils.showError('speed-test', 'Error running speed test.');
+            utils.showError('speed-test', 'Network error. Please check your connection and try again.');
+            utils.updateElement('down-speed', 'Error', '');
+            utils.updateElement('up-speed', 'Error', '');
+            utils.updateElement('ping', 'Error', '');
             console.error('Speed test error:', error);
         } finally {
             state.isSpeedTestRunning = false;
@@ -403,6 +450,9 @@ const updater = {
             if (updateMessage) {
                 if (data === true) {
                     updateMessage.style.display = 'block';
+                    // Make it more visible with animation
+                    updateMessage.style.animation = 'pulse 2s ease-in-out infinite';
+                    console.log('Update available! Check the green message at the top.');
                 } else {
                     updateMessage.style.display = 'none';
                 }
@@ -491,17 +541,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Display app version
     displayAppVersion();
     
-    // Start metrics updates
-    metrics.updateAll();
-    setInterval(() => metrics.updateAll(), CONFIG.METRICS_UPDATE_INTERVAL);
+    // Wait a moment for server to be ready, then start metrics updates
+    setTimeout(() => {
+        metrics.updateAll();
+        setInterval(() => metrics.updateAll(), CONFIG.METRICS_UPDATE_INTERVAL);
+    }, 1000); // Wait 1 second for server to be ready
     
     // Start audio controls updates
     audio.updateControls();
     setInterval(() => audio.updateControls(), CONFIG.AUDIO_UPDATE_INTERVAL);
     
-    // Check for updates
+    // Check for updates on startup
     updater.checkForUpdates();
+    
+    // Also check periodically (every 1 hour) as backup
     setInterval(() => updater.checkForUpdates(), CONFIG.UPDATE_CHECK_INTERVAL);
+    
+    // Add click handler for update message
+    const updateMessage = document.getElementById('update-message');
+    if (updateMessage) {
+        updateMessage.addEventListener('click', () => {
+            updater.updateApp();
+        });
+    }
     
     // System action buttons
     document.getElementById('off').addEventListener('click', () => {
@@ -529,6 +591,28 @@ document.addEventListener('DOMContentLoaded', () => {
         system.showConfirmation(
             '🔒 Lock your computer?',
             () => system.executeAction('/lock', 'Lock')
+        );
+    });
+    
+    // Exit app button
+    document.getElementById('exit-app').addEventListener('click', () => {
+        system.showConfirmation(
+            '🚪 Close the application? This will terminate the Monitor.exe process.',
+            async () => {
+                try {
+                    // Send exit request - the server will terminate itself
+                    await fetch('/exit', { method: 'POST' });
+                    // Show message while waiting for exit
+                    alert('Application is closing...');
+                } catch (error) {
+                    // Even if request fails, the server might still be closing
+                    console.error('Error closing app:', error);
+                    // Try to close window as fallback
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                }
+            }
         );
     });
     

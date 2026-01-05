@@ -34,11 +34,17 @@
             <i class="fas fa-lock"></i>
             <span>Lock</span>
         </button>
+        <button id="exit-app" class="action-button exit" title="Close Application">
+            <i class="fas fa-times-circle"></i>
+            <span>Close App</span>
+        </button>
     </div>
 
-    <p id="update-message" style="display: none;" onclick="updateApp()">
-        <i class="fas fa-download"></i> New version available! Click to update.
-    </p>
+    <div id="update-message" style="display: none;" class="update-notification">
+        <i class="fas fa-download"></i> 
+        <strong>New version available!</strong> Click here to update now.
+        <i class="fas fa-arrow-right"></i>
+    </div>
 
     <div class="container">
         <!-- CPU Card -->

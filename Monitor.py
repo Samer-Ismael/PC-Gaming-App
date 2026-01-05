@@ -67,10 +67,17 @@ log.setLevel(logging.ERROR)
 # Try to import speedtest, handle gracefully if not available or incompatible
 try:
     import speedtest
-    SPEEDTEST_AVAILABLE = True
+    SPEEDTEST_CLI_AVAILABLE = True
 except (ImportError, AttributeError, ModuleNotFoundError) as e:
+    SPEEDTEST_CLI_AVAILABLE = False
+
+# Import custom speed test (always available)
+try:
+    from speedtest_custom import run_speed_test
+    SPEEDTEST_AVAILABLE = True
+except ImportError as e:
     SPEEDTEST_AVAILABLE = False
-    logger.warning(f"Speedtest module not available: {e}. Speed test feature will be disabled.")
+    logger.warning(f"Custom speed test not available: {e}")
 
 
 def get_ip_address() -> str:
@@ -215,28 +222,35 @@ def gpu_metrics():
 @app.route("/speed_test", methods=["GET"])
 @handle_api_errors
 def speed_test_endpoint():
-    """Run internet speed test"""
+    """Run internet speed test using custom implementation"""
     if not SPEEDTEST_AVAILABLE:
         return jsonify({
-            "error": "Speed test feature is not available. The speedtest-cli module is not compatible with this Python version or executable format."
+            "error": "Speed test feature is not available.",
+            "available": False
         }), 503
     
     try:
-        st = speedtest.Speedtest()
-        st.get_closest_servers()
+        # Use custom speed test implementation
+        results = run_speed_test()
         
-        download_speed = st.download() / 1_000_000
-        upload_speed = st.upload() / 1_000_000
-        ping = st.results.ping
+        if results["download_speed"] == 0 and results["upload_speed"] == 0:
+            return jsonify({
+                "error": "Speed test failed. Please check your internet connection and try again.",
+                "available": True
+            }), 500
         
         return jsonify({
-            "download_speed": f"{download_speed:.2f}",
-            "upload_speed": f"{upload_speed:.2f}",
-            "ping": f"{ping:.2f}"
+            "download_speed": f"{results['download_speed']:.2f}",
+            "upload_speed": f"{results['upload_speed']:.2f}",
+            "ping": f"{results['ping']:.2f}",
+            "available": True
         })
     except Exception as e:
         logger.error(f"Error during speed test: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": f"Speed test failed: {str(e)}. Please try again later.",
+            "available": True
+        }), 500
 
 
 # ==================== AUDIO ENDPOINTS ====================
@@ -450,6 +464,33 @@ def lock():
         return jsonify({"error": str(e)}), 500
 
 
+@app.route('/exit', methods=['POST'])
+@handle_api_errors
+def exit_app():
+    """Close/exit the application (terminates the exe process)"""
+    try:
+        logger.info("Application exit requested")
+        # Schedule exit in a separate thread to allow response to be sent
+        import threading
+        def force_exit():
+            import time
+            time.sleep(0.5)  # Give time for response to be sent
+            # Force exit - this will terminate the exe process
+            os._exit(0)
+        
+        shutdown_thread = threading.Thread(target=force_exit)
+        shutdown_thread.daemon = True
+        shutdown_thread.start()
+        
+        return jsonify({"message": "Application closing..."}), 200
+    except Exception as e:
+        logger.error(f"Error exiting application: {e}")
+        # Force exit as fallback
+        import threading
+        threading.Timer(0.5, lambda: os._exit(0)).start()
+        return jsonify({"message": "Application closing..."}), 200
+
+
 # ==================== MEDIA ENDPOINTS ====================
 
 @app.route('/media/<command>', methods=['POST'])
@@ -484,6 +525,21 @@ def startup_message():
     print(f"📱 Access on your phone: {link}")
     print(f"💻 Access on this PC: http://localhost:{port}")
     print("=" * 60)
+    
+    # Check for updates on startup
+    print("\n🔍 Checking for updates...")
+    try:
+        if updater.check_update():
+            latest_version = updater.get_latest_tag_name()
+            print(f"⚠️  UPDATE AVAILABLE!")
+            print(f"   Current version: {APP_VERSION}")
+            print(f"   Latest version: {latest_version}")
+            print(f"   Check the web interface to update.\n")
+        else:
+            print(f"✅ You are running the latest version ({APP_VERSION})\n")
+    except Exception as e:
+        logger.warning(f"Could not check for updates on startup: {e}")
+        print(f"⚠️  Could not check for updates. Will check in web interface.\n")
     
     print(r"""
            /\     /\
