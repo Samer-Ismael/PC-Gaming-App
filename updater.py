@@ -137,40 +137,83 @@ def update_app():
     
     powershell_script_content = f"""
 # Update script for PC Gaming Monitor
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 
 try {{
     Write-Host "Downloading new version (v{latest_version})..."
     
-    # Download the new version to a temporary file
-    Invoke-WebRequest -Uri "{exe_url}" -OutFile "{temp_exe_path}" -UseBasicParsing
+    # Download the new version to a temporary file with unique name
+    $tempFile = Join-Path "{exe_dir}" "Monitor_update_$(Get-Date -Format 'yyyyMMddHHmmss').exe"
+    Invoke-WebRequest -Uri "{exe_url}" -OutFile $tempFile -UseBasicParsing
+    
+    Write-Host "Closing current application..."
+    
+    # Force close all Monitor.exe processes
+    $monitorProcesses = Get-Process -Name "Monitor" -ErrorAction SilentlyContinue
+    if ($monitorProcesses) {{
+        foreach ($proc in $monitorProcesses) {{
+            try {{
+                Write-Host "Closing process ID: $($proc.Id)"
+                Stop-Process -Id $proc.Id -Force -ErrorAction Stop
+            }} catch {{
+                Write-Host "Warning: Could not close process $($proc.Id): $_"
+            }}
+        }}
+    }}
+    
+    # Wait a moment for processes to fully terminate and file handles to release
+    Start-Sleep -Seconds 3
     
     Write-Host "Replacing old version..."
     
-    # Wait a moment for the current process to close
-    Start-Sleep -Seconds 2
-    
-    # Remove the old app (if it exists)
-    if (Test-Path "{current_exe_path}") {{
-        Remove-Item -Path "{current_exe_path}" -Force -ErrorAction SilentlyContinue
+    # Remove the old app (if it exists) - try multiple times
+    $oldExePath = Join-Path "{exe_dir}" "Monitor.exe"
+    if (Test-Path $oldExePath) {{
+        $retries = 5
+        $removed = $false
+        for ($i = 1; $i -le $retries; $i++) {{
+            try {{
+                Remove-Item -Path $oldExePath -Force -ErrorAction Stop
+                $removed = $true
+                break
+            }} catch {{
+                if ($i -lt $retries) {{
+                    Write-Host "Waiting for file to unlock... (attempt $i/$retries)"
+                    Start-Sleep -Seconds 2
+                }}
+            }}
+        }}
+        if (-not $removed) {{
+            # Rename old file as backup
+            $backupPath = Join-Path "{exe_dir}" "Monitor_old.exe"
+            if (Test-Path $backupPath) {{
+                Remove-Item -Path $backupPath -Force -ErrorAction SilentlyContinue
+            }}
+            Rename-Item -Path $oldExePath -NewName "Monitor_old.exe" -ErrorAction SilentlyContinue
+        }}
     }}
     
-    # Rename new file to Monitor.exe
-    Rename-Item -Path "{temp_exe_path}" -NewName "Monitor.exe" -Force
+    # Move new file to Monitor.exe
+    Move-Item -Path $tempFile -Destination $oldExePath -Force -ErrorAction Stop
     
     Write-Host "Launching new version..."
     
     # Launch the new app with admin privileges
-    $newExePath = Join-Path "{exe_dir}" "Monitor.exe"
-    Start-Process -FilePath $newExePath -Verb RunAs
+    Start-Process -FilePath $oldExePath -Verb RunAs
     
-    # Remove script file
-    Start-Sleep -Seconds 1
+    # Clean up
+    Start-Sleep -Seconds 2
+    $oldBackup = Join-Path "{exe_dir}" "Monitor_old.exe"
+    if (Test-Path $oldBackup) {{
+        Remove-Item -Path $oldBackup -Force -ErrorAction SilentlyContinue
+    }}
     Remove-Item -Path "{update_script_path}" -Force -ErrorAction SilentlyContinue
     
-    Write-Host "Update completed!"
+    Write-Host "Update completed! The new version is starting..."
+    Start-Sleep -Seconds 2
 }} catch {{
-    Write-Host "Error during update: $_"
+    Write-Host "Error during update: $_" -ForegroundColor Red
+    Write-Host "You may need to manually download the update from GitHub."
     Read-Host "Press Enter to exit"
 }}
 """
