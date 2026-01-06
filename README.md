@@ -2,6 +2,10 @@
 
 A modern, feature-rich system monitoring application that allows you to monitor your PC's performance metrics in real-time from any device on your network.
 
+## 🖥️ Screenshots
+
+![PC Gaming Monitor Dashboard](static/Screenshot_20260105-225210.png)
+
 ## ✨ What's New in v2.0
 
 ### Backend Improvements
