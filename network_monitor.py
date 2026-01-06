@@ -64,12 +64,13 @@ def get_network_stats():
         }
 
 
-def get_active_connections(limit=20):
+def get_active_connections(limit=20, filter_time_wait=True):
     """
     Get active network connections
     
     Args:
         limit: Maximum number of connections to return
+        filter_time_wait: If True, filter out TIME_WAIT connections
     
     Returns:
         List of connection dictionaries
@@ -78,6 +79,10 @@ def get_active_connections(limit=20):
         connections = []
         for conn in psutil.net_connections(kind='inet'):
             try:
+                # Filter out TIME_WAIT connections if requested
+                if filter_time_wait and conn.status == 'TIME_WAIT':
+                    continue
+                
                 conn_info = {
                     'status': conn.status,
                     'local_address': f"{conn.laddr.ip}:{conn.laddr.port}" if conn.laddr else "N/A",
@@ -94,7 +99,9 @@ def get_active_connections(limit=20):
                     except (psutil.NoSuchProcess, psutil.AccessDenied):
                         pass
                 
-                connections.append(conn_info)
+                # Only include connections with a known process name
+                if conn_info['process_name']:
+                    connections.append(conn_info)
             except (psutil.AccessDenied, psutil.NoSuchProcess):
                 pass
         

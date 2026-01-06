@@ -87,8 +87,8 @@ const utils = {
             element.style.display = 'block';
             element.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
             element.style.color = '#38ef7d';
-            
-            setTimeout(() => {
+                
+                setTimeout(() => {
                 this.hideLoading(id);
             }, duration);
         }
@@ -114,23 +114,28 @@ const api = {
      */
     async fetchMetrics(endpoint) {
         try {
+            // Create AbortController for timeout (AbortSignal.timeout not supported in Qt WebEngine)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+            
             const response = await fetch(endpoint, {
                 method: 'GET',
                 cache: 'no-cache',
-                signal: AbortSignal.timeout(5000) // 5 second timeout
+                signal: controller.signal
             });
+            
+            clearTimeout(timeoutId); // Clear timeout if request succeeds
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             return await response.json();
         } catch (error) {
-            // Suppress connection errors to reduce console spam
-            // Only log errors that aren't connection/timeout related
+            // Only log non-connection errors in production
             const isConnectionError = error.name === 'TypeError' || 
                                      error.name === 'AbortError' || 
                                      error.message?.includes('Failed to fetch') ||
-                                     error.message?.includes('network') ||
-                                     error.message?.includes('ERR_CONNECTION');
+                                     error.message?.includes('network');
             
             if (!isConnectionError) {
                 console.error(`Error fetching ${endpoint}:`, error);
@@ -448,12 +453,12 @@ const updater = {
             
             // Only show message if update is actually available (boolean true)
             if (updateMessage) {
-                if (data === true) {
+            if (data === true) {
                     updateMessage.style.display = 'block';
                     // Make it more visible with animation
                     updateMessage.style.animation = 'pulse 2s ease-in-out infinite';
                     console.log('Update available! Check the green message at the top.');
-                } else {
+            } else {
                     updateMessage.style.display = 'none';
                 }
             }
@@ -532,87 +537,9 @@ async function displayAppVersion() {
             document.getElementById('app-version').textContent = `App Version: ${data.version}`;
         }
     } catch (error) {
-        console.error('Error fetching app version:', error);
+            console.error('Error fetching app version:', error);
     }
 }
-
-// Process Manager
-const processManager = {
-    currentSort: 'cpu',
-    
-    async loadProcesses(sortBy = 'cpu') {
-        try {
-            const data = await api.fetchMetrics(`/processes?sort_by=${sortBy}&limit=15`);
-            if (data && data.processes) {
-                this.renderProcesses(data.processes);
-            }
-        } catch (error) {
-            console.error('Error loading processes:', error);
-            document.getElementById('processes-list').innerHTML = 
-                '<p style="text-align: center; color: var(--text-muted);">Error loading processes</p>';
-        }
-    },
-    
-    renderProcesses(processes) {
-        const container = document.getElementById('processes-list');
-        if (!processes || processes.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">No processes found</p>';
-            return;
-        }
-        
-        const html = processes.map(proc => `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; margin: 5px 0; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                <div style="flex: 1;">
-                    <div style="font-weight: bold; color: var(--text-primary);">${proc.name}</div>
-                    <div style="font-size: 0.85rem; color: var(--text-secondary);">PID: ${proc.pid}</div>
-                </div>
-                <div style="text-align: right; margin-right: 15px;">
-                    <div style="color: var(--accent-color);">CPU: ${proc.cpu_percent}%</div>
-                    <div style="color: var(--accent-color);">RAM: ${proc.memory_percent}% (${proc.memory_mb} MB)</div>
-                </div>
-                <button onclick="processManager.killProcess(${proc.pid}, '${proc.name}')" 
-                        style="padding: 5px 10px; background: rgba(220,53,69,0.8); border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 0.85rem;"
-                        title="Kill Process">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `).join('');
-        
-        container.innerHTML = html;
-    },
-    
-    async killProcess(pid, name) {
-        if (!confirm(`Are you sure you want to kill process "${name}" (PID: ${pid})?`)) {
-            return;
-        }
-        
-        try {
-            const response = await fetch('/kill_process', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pid })
-            });
-            const data = await response.json();
-            
-            if (data.status === 'success') {
-                alert(data.message);
-                this.loadProcesses(this.currentSort);
-            } else {
-                alert(data.message || 'Failed to kill process');
-            }
-        } catch (error) {
-            alert('Error killing process');
-            console.error('Kill process error:', error);
-        }
-    },
-    
-    sortBy(sortBy) {
-        this.currentSort = sortBy;
-        document.getElementById('sort-cpu').classList.toggle('active', sortBy === 'cpu');
-        document.getElementById('sort-memory').classList.toggle('active', sortBy === 'memory');
-        this.loadProcesses(sortBy);
-    }
-};
 
 // System Information
 const systemInfo = {
@@ -720,7 +647,7 @@ const networkMonitor = {
                 <div><strong>${conn.process_name || 'Unknown'}</strong> (PID: ${conn.pid || 'N/A'})</div>
                 <div style="color: var(--text-secondary); font-size: 0.85rem;">
                     ${conn.local_address} → ${conn.remote_address}
-                </div>
+            </div>
                 <div style="color: var(--accent-color); font-size: 0.8rem;">Status: ${conn.status}</div>
             </div>
         `).join('');
@@ -729,8 +656,6 @@ const networkMonitor = {
     }
 };
 
-// Make processManager globally available
-window.processManager = processManager;
 
 
 // File Explorer
@@ -791,8 +716,8 @@ const fileExplorer = {
                         <div class="file-explorer-item-details">${size}</div>
                     </div>
                     ${!item.is_dir ? '<i class="fas fa-download file-explorer-item-action"></i>' : '<i class="fas fa-chevron-right file-explorer-item-action"></i>'}
-                </div>
-            `;
+        </div>
+    `;
         }).join('');
         
         container.innerHTML = html;
@@ -1403,8 +1328,8 @@ const remoteDesktop = {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ...coords, clicks })
-            });
-        } catch (error) {
+        });
+    } catch (error) {
             console.error('Error scrolling mouse:', error);
         }
     },
@@ -1431,11 +1356,11 @@ const remoteDesktop = {
     async sendKey(key) {
         try {
             await fetch('/remote/keyboard/press', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key })
-            });
-        } catch (error) {
+        });
+    } catch (error) {
             console.error('Error sending key:', error);
         }
     },
@@ -1553,7 +1478,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     // Load new features
-    processManager.loadProcesses('cpu');
     systemInfo.load();
     networkMonitor.loadStats();
     networkMonitor.loadConnections();
@@ -1561,7 +1485,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Update new features periodically
     setInterval(() => networkMonitor.loadStats(), 2000);
     setInterval(() => networkMonitor.loadConnections(), 10000);
-    setInterval(() => processManager.loadProcesses(processManager.currentSort), 5000);
     
     // Add click handler for update message
     const updateMessage = document.getElementById('update-message');

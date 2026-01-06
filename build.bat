@@ -60,6 +60,16 @@ if errorlevel 1 (
     python -m pip install Pillow
 )
 
+REM Check if PyQt5 is installed (needed for standalone window)
+python -c "import PyQt5" 2>nul
+if errorlevel 1 (
+    echo PyQt5 not found. Installing for standalone window support...
+    python -m pip install PyQt5 PyQtWebEngine
+    if errorlevel 1 (
+        echo Warning: Failed to install PyQt5. The app will fall back to browser mode.
+    )
+)
+
 echo.
 echo Starting build process...
 echo.

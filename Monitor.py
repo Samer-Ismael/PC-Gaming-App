@@ -10,10 +10,12 @@ import os
 import sys
 import ctypes
 import webbrowser
+import threading
+import time
 
 from config import (
     SERVER_HOST, SERVER_PORT, DEBUG, LIB_FOLDER,
-    APP_VERSION
+    APP_VERSION, BASE_DIR
 )
 from utils.logger import setup_logger
 from utils.errors import handle_api_errors
@@ -42,10 +44,12 @@ def run_as_admin():
 
 # Request admin privileges on startup
 if not is_admin():
-    print("Requesting administrator privileges...")
+    if DEBUG:
+        print("Requesting administrator privileges...")
     run_as_admin()
 
-print("Running with administrator privileges.")
+if DEBUG:
+    print("Running with administrator privileges.")
 
 # Import metric modules
 from gpu import get_gpu_metrics
@@ -55,7 +59,6 @@ from disk import get_disk_metrics, clear_temp_files
 import updater
 import media
 import psutil
-from processes import get_top_processes, kill_process
 from system_info import get_system_info
 from network_monitor import get_network_stats, get_active_connections
 # Try to import remote desktop module, handle gracefully if not available
@@ -114,7 +117,12 @@ def favicon():
 
 @app.after_request
 def log_bad_requests(response):
-    """Log non-200 responses"""
+    """Log non-200 responses and add CORS headers"""
+    # Add CORS headers to allow requests from Qt WebEngine
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    
     if response.status_code not in [200, 304]:
         logger.warning(f"Bad Request: {request.method} {request.path} - Status {response.status_code}")
     return response
@@ -396,41 +404,6 @@ def clear_temp_files_route():
 
 
 # ==================== PROCESS MANAGER ENDPOINTS ====================
-
-@app.route('/processes', methods=['GET'])
-@handle_api_errors
-def get_processes():
-    """Get top processes by CPU or memory usage"""
-    try:
-        sort_by = request.args.get('sort_by', 'cpu')  # 'cpu' or 'memory'
-        limit = int(request.args.get('limit', 10))
-        processes = get_top_processes(limit=limit, sort_by=sort_by)
-        return jsonify({'processes': processes})
-    except Exception as e:
-        logger.error(f"Error getting processes: {e}")
-        return jsonify({'error': str(e), 'processes': []}), 500
-
-
-@app.route('/kill_process', methods=['POST'])
-@handle_api_errors
-def kill_process_endpoint():
-    """Kill a process by PID"""
-    try:
-        data = request.json
-        pid = data.get('pid')
-        
-        if not pid:
-            return jsonify({'error': 'PID is required'}), 400
-        
-        success, message = kill_process(int(pid))
-        if success:
-            return jsonify({'status': 'success', 'message': message}), 200
-        else:
-            return jsonify({'status': 'error', 'message': message}), 400
-    except Exception as e:
-        logger.error(f"Error killing process: {e}")
-        return jsonify({'error': str(e)}), 500
-
 
 # ==================== SYSTEM INFO ENDPOINTS ====================
 
@@ -896,14 +869,206 @@ if __name__ == "__main__":
     ip_address = get_ip_address()
     url = f'http://{ip_address}:{SERVER_PORT}'
     
-    # Only open browser if not in development mode
-    if not DEBUG or not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+    # Check if we should use standalone window or browser
+    use_standalone_window = True  # Set to False to use browser instead
+    
+    if use_standalone_window:
         try:
-            webbrowser.open(url)
+            from PyQt5.QtWidgets import QApplication
+            from PyQt5.QtCore import QUrl, QSettings
+            from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings
+            import sys
+            
+            def run_flask_server():
+                """Run Flask server in a separate thread"""
+                WSGIRequestHandler.protocol_version = "HTTP/1.1"
+                # Use 0.0.0.0 to allow access from other devices on the network
+                # The standalone window will connect via localhost, but other devices can use the IP
+                host = '0.0.0.0'  # Listen on all interfaces
+                logger.info(f"Starting server on {host}:{SERVER_PORT}")
+                if DEBUG:
+                    logger.info(f"Access from this PC: http://127.0.0.1:{SERVER_PORT}")
+                    logger.info(f"Access from network: http://{get_ip_address()}:{SERVER_PORT}")
+                try:
+                    # Use Werkzeug's development server directly for better thread compatibility
+                    from werkzeug.serving import make_server
+                    server = make_server(host, SERVER_PORT, app, threaded=True)
+                    logger.info(f"Server started successfully on {host}:{SERVER_PORT}")
+                    server.serve_forever()
+                except Exception as e:
+                    logger.error(f"Flask server error: {e}")
+                    import traceback
+                    logger.error(traceback.format_exc())
+            
+            # Start Flask server in a separate thread (daemon=True so it stops when main thread exits)
+            server_thread = threading.Thread(target=run_flask_server, daemon=True)
+            server_thread.start()
+            
+            # Wait for server to fully start with better checking
+            max_wait = 10
+            waited = 0
+            server_ready = False
+            while waited < max_wait:
+                try:
+                    import urllib.request
+                    import socket
+                    # First check if port is open
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    sock.settimeout(1)
+                    result = sock.connect_ex(('127.0.0.1', SERVER_PORT))
+                    sock.close()
+                    if result == 0:
+                        # Port is open, try HTTP request
+                        response = urllib.request.urlopen(f'http://127.0.0.1:{SERVER_PORT}', timeout=2)
+                        if response.getcode() == 200:
+                            logger.info("Server is ready!")
+                            server_ready = True
+                            break
+                except Exception as e:
+                    pass
+                time.sleep(0.5)
+                waited += 0.5
+                if waited % 1 == 0:  # Log every second
+                    logger.info(f"Waiting for server to start... ({waited:.1f}s)")
+            
+            if not server_ready:
+                logger.error(f"Server failed to start after {max_wait} seconds!")
+                logger.error("Falling back to browser mode...")
+                # Fallback to browser
+                ip_address = get_ip_address()
+                fallback_url = f'http://{ip_address}:{SERVER_PORT}'
+                if not DEBUG or not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+                    try:
+                        webbrowser.open(fallback_url)
+                    except Exception as e:
+                        logger.warning(f"Could not open browser: {e}")
+                WSGIRequestHandler.protocol_version = "HTTP/1.1"
+                logger.info(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
+                app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
+            else:
+                # Server is ready, create the window
+                # Create Qt application
+                qt_app = QApplication(sys.argv)
+                qt_app.setApplicationName("PC Gaming Monitor")
+                
+                # Set application icon
+                from PyQt5.QtGui import QIcon
+                icon_path = str(BASE_DIR / 'icon.png')
+                if os.path.exists(icon_path):
+                    qt_app.setWindowIcon(QIcon(icon_path))
+                    logger.info(f"Set application icon: {icon_path}")
+                else:
+                    logger.warning(f"Icon not found at {icon_path}")
+                
+                # Enable local content access for Qt WebEngine
+                QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+                QWebEngineSettings.globalSettings().setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
+                
+                # Create web view window
+                browser = QWebEngineView()
+                browser.setWindowTitle("PC Gaming Monitor")
+                browser.resize(1400, 900)
+                browser.setMinimumSize(800, 600)
+                
+                # Set window icon
+                if os.path.exists(icon_path):
+                    browser.setWindowIcon(QIcon(icon_path))
+                
+                # Enable JavaScript and other features
+                settings = browser.settings()
+                settings.setAttribute(QWebEngineSettings.JavascriptEnabled, True)
+                settings.setAttribute(QWebEngineSettings.LocalContentCanAccessRemoteUrls, True)
+                settings.setAttribute(QWebEngineSettings.LocalContentCanAccessFileUrls, True)
+                
+                # Enable JavaScript console logging only in debug mode
+                if DEBUG:
+                    from PyQt5.QtWebEngineWidgets import QWebEnginePage
+                    
+                    class ConsolePage(QWebEnginePage):
+                        def javaScriptConsoleMessage(self, level, message, lineNumber, sourceID):
+                            level_str = {0: 'INFO', 1: 'WARNING', 2: 'ERROR'}.get(level, 'UNKNOWN')
+                            logger.info(f"JS Console [{level_str}]: {message} (line {lineNumber})")
+                    
+                    # Set custom page with console logging
+                    console_page = ConsolePage(browser)
+                    browser.setPage(console_page)
+                
+                # Load the URL after server is confirmed ready (use 127.0.0.1 explicitly)
+                app_url = f'http://127.0.0.1:{SERVER_PORT}'
+                url = QUrl(app_url)
+                
+                # Add a small delay to ensure server is fully ready
+                time.sleep(0.5)
+                
+                if DEBUG:
+                    logger.info(f"Loading URL: {app_url}")
+                browser.load(url)
+                browser.show()
+                
+                logger.info(f"Opening application window at {app_url}...")
+                logger.info("If you see 'Loading...' messages, check the console for server errors.")
+                
+                # Run the Qt event loop (this blocks until window is closed)
+                qt_app.exec_()
+                
+                # When window closes, the daemon thread will be cleaned up automatically
+                logger.info("Window closed.")
+            
+            # Create Qt application
+            qt_app = QApplication(sys.argv)
+            qt_app.setApplicationName("PC Gaming Monitor")
+            
+            # Create web view window
+            browser = QWebEngineView()
+            browser.setWindowTitle("PC Gaming Monitor")
+            browser.resize(1400, 900)
+            browser.setMinimumSize(800, 600)
+            
+            # Load the URL after server is confirmed ready (use 127.0.0.1 explicitly)
+            url = QUrl(f'http://127.0.0.1:{SERVER_PORT}')
+            browser.load(url)
+            browser.show()
+            
+            logger.info(f"Opening application window at {url.toString()}...")
+            
+            # Run the Qt event loop (this blocks until window is closed)
+            qt_app.exec_()
+            
+            # When window closes, the daemon thread will be cleaned up automatically
+            logger.info("Window closed.")
+            
+        except ImportError as e:
+            logger.warning(f"PyQt5 not available: {e}")
+            logger.info("Install with: pip install PyQt5 PyQtWebEngine")
+            logger.info("Falling back to browser mode...")
+            # Fallback to browser
+            if not DEBUG or not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+                try:
+                    webbrowser.open(url)
+                except Exception as e:
+                    logger.warning(f"Could not open browser: {e}")
+            WSGIRequestHandler.protocol_version = "HTTP/1.1"
+            logger.info(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
+            app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
         except Exception as e:
-            logger.warning(f"Could not open browser: {e}")
-    
-    WSGIRequestHandler.protocol_version = "HTTP/1.1"
-    
-    logger.info(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
-    app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
+            logger.error(f"Error starting standalone window: {e}")
+            logger.info("Falling back to browser mode...")
+            # Fallback to browser
+            if not DEBUG or not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+                try:
+                    webbrowser.open(url)
+                except Exception as e:
+                    logger.warning(f"Could not open browser: {e}")
+            WSGIRequestHandler.protocol_version = "HTTP/1.1"
+            logger.info(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
+            app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
+    else:
+        # Use browser mode
+        if not DEBUG or not os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+            try:
+                webbrowser.open(url)
+            except Exception as e:
+                logger.warning(f"Could not open browser: {e}")
+        WSGIRequestHandler.protocol_version = "HTTP/1.1"
+        logger.info(f"Starting server on {SERVER_HOST}:{SERVER_PORT}")
+        app.run(host=SERVER_HOST, port=SERVER_PORT, debug=DEBUG)
